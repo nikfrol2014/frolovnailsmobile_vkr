@@ -1,10 +1,11 @@
 package com.example.frolovnails.common;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKeys;
+import androidx.security.crypto.MasterKey;
+import android.content.SharedPreferences;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
@@ -17,11 +18,22 @@ public class TokenManager {
     private final SharedPreferences sharedPreferences;
 
     public TokenManager(Context context) throws GeneralSecurityException, IOException {
-        String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+        // Новый способ создания MasterKey
+        MasterKey masterKey = new MasterKey.Builder(context)
+                .setKeyGenParameterSpec(
+                        new KeyGenParameterSpec.Builder(
+                                MasterKey.DEFAULT_MASTER_KEY_ALIAS,
+                                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                                .setKeySize(256)
+                                .build())
+                .build();
+
         sharedPreferences = EncryptedSharedPreferences.create(
-                PREF_NAME,
-                masterKeyAlias,
                 context,
+                PREF_NAME,
+                masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         );

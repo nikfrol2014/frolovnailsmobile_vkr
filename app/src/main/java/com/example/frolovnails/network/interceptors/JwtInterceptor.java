@@ -1,5 +1,9 @@
 package com.example.frolovnails.network.interceptors;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -18,10 +22,17 @@ public class JwtInterceptor implements Interceptor {
         String token = tokenManager.getAccessToken();
         Request request = chain.request();
 
-        if (token != null) {
+        Log.d("JWT", "=== JWT Interceptor called ===");
+        Log.d("JWT", "Request URL: " + request.url());
+        Log.d("JWT", "Token from manager: " + (token != null ? "present, length=" + token.length() : "null"));
+
+        if (token != null && !token.isEmpty()) {
             request = request.newBuilder()
                     .addHeader("Authorization", "Bearer " + token)
                     .build();
+            Log.d("JWT", "✅ Authorization header added");
+        } else {
+            Log.w("JWT", "❌ No token available");
         }
 
         return chain.proceed(request);

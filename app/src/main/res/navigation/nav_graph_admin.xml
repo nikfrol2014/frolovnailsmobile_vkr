@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_admin"
+    app:startDestination="@id/nav_calendar">
+
+    <fragment
+        android:id="@+id/nav_calendar"
+        android:name="com.example.frolovnails.admin.CalendarFragment"
+        android:label="Календарь"
+        tools:layout="@layout/fragment_calendar" />
+
+    <fragment
+        android:id="@+id/nav_clients"
+        android:name="com.example.frolovnails.admin.ClientsFragment"
+        android:label="Клиенты"
+        tools:layout="@layout/fragment_clients" />
+
+    <fragment
+        android:id="@+id/nav_services_admin"
+        android:name="com.example.frolovnails.admin.ServicesAdminFragment"
+        android:label="Услуги"
+        tools:layout="@layout/fragment_services_admin" />
+
+    <fragment
+        android:id="@+id/nav_schedule"
+        android:name="com.example.frolovnails.admin.ScheduleFragment"
+        android:label="Расписание"
+        tools:layout="@layout/fragment_schedule" />
+
+</navigation>

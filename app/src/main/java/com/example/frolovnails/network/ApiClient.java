@@ -1,5 +1,7 @@
 package com.example.frolovnails.network;
 
+import android.util.Log;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -12,23 +14,24 @@ public class ApiClient {
     private static Retrofit retrofit = null;
 
     public static Retrofit getClient(TokenManager tokenManager) {
-        if (retrofit == null) {
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-            httpClient.addInterceptor(logging);
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.addInterceptor(logging);
 
-            if (tokenManager != null) {
-                httpClient.addInterceptor(new JwtInterceptor(tokenManager));
-            }
-
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .client(httpClient.build())
-                    .build();
+        if (tokenManager != null) {
+            JwtInterceptor interceptor = new JwtInterceptor(tokenManager);
+            httpClient.addInterceptor(interceptor);
+            Log.d("ApiClient", "JwtInterceptor added");
+        } else {
+            Log.d("ApiClient", "TokenManager is null, no interceptor");
         }
-        return retrofit;
+
+        return new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient.build())
+                .build();
     }
 }

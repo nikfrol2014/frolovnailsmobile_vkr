@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_calendar"
+        android:icon="@android:drawable/ic_menu_month"
+        android:title="Календарь" />
+    <item
+        android:id="@+id/nav_clients"
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:title="Клиенты" />
+    <item
+        android:id="@+id/nav_services_admin"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Услуги" />
+    <item
+        android:id="@+id/nav_schedule"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="Расписание" />
+</menu>
