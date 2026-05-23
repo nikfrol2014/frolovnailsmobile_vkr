@@ -1,6 +1,7 @@
 package com.example.frolovnails.network;
 
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -47,6 +48,12 @@ public interface ApiService {
     Call<ApiResponse<Appointment>> cancelAppointment(@Path("id") Long id);
 
     // ========== Записи (админ) ==========
+
+    @PATCH("/api/appointments/{id}/notes")
+    Call<ApiResponse<Appointment>> updateMasterNotes(
+            @Path("id") Long id,
+            @Body Map<String, String> notes
+    );
     @GET("/api/appointments/timeline")
     Call<ApiResponse<TimelineResponse>> getTimeline(
             @Query("startDate") String startDate,

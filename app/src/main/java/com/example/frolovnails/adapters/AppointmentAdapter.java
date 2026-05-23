@@ -1,8 +1,10 @@
 package com.example.frolovnails.adapters;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,6 +24,7 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
 
     public interface OnAppointmentClickListener {
         void onAppointmentClick(Appointment appointment);
+        void onMasterNotesClick(Appointment appointment);
     }
 
     public void setOnAppointmentClickListener(OnAppointmentClickListener listener) {
@@ -53,7 +56,8 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
     }
 
     static class AppointmentViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTime, tvClient, tvService, tvStatus;
+        TextView tvTime, tvClient, tvService, tvStatus, tvMasterNotes;
+        private Button btnMasterNotes;
 
         AppointmentViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -61,8 +65,10 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
             tvClient = itemView.findViewById(R.id.tvClient);
             tvService = itemView.findViewById(R.id.tvService);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            btnMasterNotes = itemView.findViewById(R.id.btnMasterNotes);
         }
 
+        @SuppressLint("SetTextI18n")
         void bind(Appointment appointment, OnAppointmentClickListener listener) {
             tvTime.setText(appointment.getStartTime() + " - " + appointment.getEndTime());
             tvClient.setText(appointment.getClient().getFirstName() + " " + appointment.getClient().getLastName());
@@ -70,6 +76,15 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
 
             String status = String.valueOf(appointment.getStatus());
             tvStatus.setText(status);
+
+            // Отображение заметок мастера
+            String masterNotes = appointment.getMasterNotes();
+            if (masterNotes != null && !masterNotes.isEmpty()) {
+                tvMasterNotes.setVisibility(View.VISIBLE);
+                tvMasterNotes.setText("📝 " + masterNotes);
+            } else {
+                tvMasterNotes.setVisibility(View.GONE);
+            }
 
             // Цвет статуса
             switch (status) {
@@ -104,6 +119,12 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
                         .setNegativeButton("Нет", null)
                         .show();
                 return true;
+            });
+
+            btnMasterNotes.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onMasterNotesClick(appointment);
+                }
             });
         }
     }

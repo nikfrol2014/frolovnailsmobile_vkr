@@ -17,6 +17,7 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.TimelineResponse;
+import com.example.frolovnails.ui.MasterNotesDialog;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -61,6 +62,21 @@ public class CalendarFragment extends RefreshableFragment {
         rvAppointments.setLayoutManager(new LinearLayoutManager(getContext()));
         appointmentAdapter = new AppointmentAdapter();
         rvAppointments.setAdapter(appointmentAdapter);
+
+        // Обработчик кликов по записям
+        appointmentAdapter.setOnAppointmentClickListener(new AppointmentAdapter.OnAppointmentClickListener() {
+            @Override
+            public void onAppointmentClick(Appointment appointment) {
+                // Пока пусто, можно добавить открытие деталей клиента
+            }
+
+            @Override
+            public void onMasterNotesClick(Appointment appointment) {
+                MasterNotesDialog dialog = MasterNotesDialog.newInstance(appointment);
+                dialog.show(getChildFragmentManager(), "master_notes");
+//                dialog.getDialog().setOnDismissListener(d -> loadData());
+            }
+        });
 
         dateAdapter.setOnDateClickListener((date, position) -> {
             dateAdapter.setSelectedPosition(position);

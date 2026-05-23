@@ -1,6 +1,8 @@
 package com.example.frolovnails.network.models.response;
 
-public class Appointment {
+import java.io.Serializable;
+
+public class Appointment implements Serializable {
     private Long id;
     private ClientInfo client;
     private ServiceInfo service;
