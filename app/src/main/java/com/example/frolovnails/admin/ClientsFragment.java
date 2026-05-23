@@ -1,21 +1,17 @@
 package com.example.frolovnails.admin;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frolovnails.R;
 import com.example.frolovnails.adapters.ClientsAdapter;
+import com.example.frolovnails.common.RefreshableFragment;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.ClientListItem;
@@ -24,28 +20,28 @@ import com.example.frolovnails.ui.ClientDetailsDialog;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
-public class ClientsFragment extends Fragment {
+public class ClientsFragment extends RefreshableFragment {
 
     private RecyclerView rvClients;
     private ProgressBar progressBar;
     private TextView tvEmpty;
     private ClientsAdapter adapter;
     private ClientViewModel viewModel;
-    private int currentPage = 0;
-    private static final int PAGE_SIZE = 20;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_clients, container, false);
+    protected int getLayoutResId() {
+        return R.layout.fragment_clients;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    protected int getSwipeRefreshId() {
+        return R.id.swipeRefreshClients;
+    }
 
+    @Override
+    protected void initViews(View view) {
         rvClients = view.findViewById(R.id.rvClients);
         progressBar = view.findViewById(R.id.progressBar);
         tvEmpty = view.findViewById(R.id.tvEmpty);
@@ -55,11 +51,10 @@ public class ClientsFragment extends Fragment {
         rvClients.setAdapter(adapter);
 
         adapter.setOnClientClickListener(client -> {
-            // TODO: открыть детали клиента
-            showClientDetailsDialog(client.getId());
+            ClientDetailsDialog dialog = ClientDetailsDialog.newInstance(client.getId());
+            dialog.show(getChildFragmentManager(), "client_details");
         });
 
-        // Инициализация TokenManager
         TokenManager tokenManager = null;
         try {
             tokenManager = new TokenManager(requireContext());
@@ -69,19 +64,22 @@ public class ClientsFragment extends Fragment {
         final TokenManager finalTokenManager = tokenManager;
 
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @NonNull
             @Override
             public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
                 return (T) new ClientViewModel(finalTokenManager);
             }
         }).get(ClientViewModel.class);
-
-        loadClients();
     }
 
-    private void loadClients() {
-        viewModel.loadClients(currentPage, PAGE_SIZE, null);
+    @Override
+    protected void loadData() {
+        viewModel.loadClients(0, 20, null);
         viewModel.getClientsResult().observe(getViewLifecycleOwner(), this::handleClientsResult);
+    }
+
+    @Override
+    protected void onRefresh() {
+        loadData();
     }
 
     private void handleClientsResult(Resource<ClientsListResponse> resource) {
@@ -91,6 +89,7 @@ public class ClientsFragment extends Fragment {
             progressBar.setVisibility(View.VISIBLE);
             rvClients.setVisibility(View.GONE);
             tvEmpty.setVisibility(View.GONE);
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
             ClientsListResponse data = ((Resource.Success<ClientsListResponse>) resource).getData();
@@ -104,16 +103,13 @@ public class ClientsFragment extends Fragment {
                 rvClients.setVisibility(View.VISIBLE);
                 adapter.setClients(data.getClients());
             }
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             tvEmpty.setVisibility(View.VISIBLE);
             rvClients.setVisibility(View.GONE);
             tvEmpty.setText("Ошибка: " + ((Resource.Error<ClientsListResponse>) resource).getMessage());
+            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
         }
-    }
-
-    private void showClientDetailsDialog(Long clientId) {
-        ClientDetailsDialog dialog = ClientDetailsDialog.newInstance(clientId);
-        dialog.show(getChildFragmentManager(), "client_details");
     }
 }

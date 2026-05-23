@@ -1,21 +1,17 @@
 package com.example.frolovnails.admin;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frolovnails.R;
 import com.example.frolovnails.adapters.ScheduleBlocksAdapter;
+import com.example.frolovnails.common.RefreshableFragment;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.ScheduleBlock;
@@ -26,7 +22,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
-public class ScheduleBlocksTabFragment extends Fragment {
+public class ScheduleBlocksTabFragment extends RefreshableFragment {
 
     private RecyclerView rvBlocks;
     private ProgressBar progressBlocks;
@@ -35,23 +31,18 @@ public class ScheduleBlocksTabFragment extends Fragment {
     private ScheduleBlocksAdapter adapter;
     private ScheduleViewModel viewModel;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_schedule_blocks_tab, container, false);
+    protected int getLayoutResId() {
+        return R.layout.fragment_schedule_blocks_tab;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        loadBlocks(); // Обновляем список при возвращении на фрагмент
+    protected int getSwipeRefreshId() {
+        return R.id.swipeRefreshBlocks;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
+    protected void initViews(View view) {
         rvBlocks = view.findViewById(R.id.rvBlocks);
         progressBlocks = view.findViewById(R.id.progressBlocks);
         tvEmptyBlocks = view.findViewById(R.id.tvEmptyBlocks);
@@ -70,7 +61,6 @@ public class ScheduleBlocksTabFragment extends Fragment {
         final TokenManager finalTokenManager = tokenManager;
 
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @NonNull
             @Override
             public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
                 return (T) new ScheduleViewModel(finalTokenManager);
@@ -81,7 +71,7 @@ public class ScheduleBlocksTabFragment extends Fragment {
             viewModel.deleteScheduleBlock(item.getId());
             viewModel.getDeleteScheduleBlockResult().observe(getViewLifecycleOwner(), resource -> {
                 if (resource instanceof Resource.Success) {
-                    loadBlocks();
+                    loadData();
                 }
             });
         });
@@ -90,11 +80,10 @@ public class ScheduleBlocksTabFragment extends Fragment {
             ScheduleBlockDialog dialog = ScheduleBlockDialog.newInstance();
             dialog.show(getChildFragmentManager(), "add_block");
         });
-
-        loadBlocks();
     }
 
-    private void loadBlocks() {
+    @Override
+    protected void loadData() {
         viewModel.loadScheduleBlocks(3);
         viewModel.getScheduleBlocksResult().observe(getViewLifecycleOwner(), resource -> {
             if (resource instanceof Resource.Loading) {
@@ -118,5 +107,10 @@ public class ScheduleBlocksTabFragment extends Fragment {
                 tvEmptyBlocks.setText("Ошибка: " + ((Resource.Error<List<ScheduleBlock>>) resource).getMessage());
             }
         });
+    }
+
+    @Override
+    protected void onRefresh() {
+        loadData();
     }
 }

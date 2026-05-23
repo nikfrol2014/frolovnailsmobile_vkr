@@ -1,21 +1,17 @@
 package com.example.frolovnails.admin;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frolovnails.R;
 import com.example.frolovnails.adapters.AvailableDaysAdapter;
+import com.example.frolovnails.common.RefreshableFragment;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.AvailableDay;
@@ -26,7 +22,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
-public class AvailableDaysTabFragment extends Fragment {
+public class AvailableDaysTabFragment extends RefreshableFragment {
 
     private RecyclerView rvAvailableDays;
     private ProgressBar progressDays;
@@ -35,23 +31,18 @@ public class AvailableDaysTabFragment extends Fragment {
     private AvailableDaysAdapter adapter;
     private ScheduleViewModel viewModel;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_available_days_tab, container, false);
+    protected int getLayoutResId() {
+        return R.layout.fragment_available_days_tab;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        loadDays();
+    protected int getSwipeRefreshId() {
+        return R.id.swipeRefreshDays;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
+    protected void initViews(View view) {
         rvAvailableDays = view.findViewById(R.id.rvAvailableDays);
         progressDays = view.findViewById(R.id.progressDays);
         tvEmptyDays = view.findViewById(R.id.tvEmptyDays);
@@ -70,7 +61,6 @@ public class AvailableDaysTabFragment extends Fragment {
         final TokenManager finalTokenManager = tokenManager;
 
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @NonNull
             @Override
             public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
                 return (T) new ScheduleViewModel(finalTokenManager);
@@ -89,7 +79,7 @@ public class AvailableDaysTabFragment extends Fragment {
                 viewModel.deleteAvailableDay(item.getId());
                 viewModel.getDeleteAvailableDayResult().observe(getViewLifecycleOwner(), resource -> {
                     if (resource instanceof Resource.Success) {
-                        loadDays();
+                        loadData();
                     }
                 });
             }
@@ -99,11 +89,10 @@ public class AvailableDaysTabFragment extends Fragment {
             AvailableDayDialog dialog = AvailableDayDialog.newInstance();
             dialog.show(getChildFragmentManager(), "add_day");
         });
-
-        loadDays();
     }
 
-    private void loadDays() {
+    @Override
+    protected void loadData() {
         viewModel.loadAvailableDays(3);
         viewModel.getAvailableDaysResult().observe(getViewLifecycleOwner(), resource -> {
             if (resource instanceof Resource.Loading) {
@@ -127,5 +116,10 @@ public class AvailableDaysTabFragment extends Fragment {
                 tvEmptyDays.setText("Ошибка: " + ((Resource.Error<List<AvailableDay>>) resource).getMessage());
             }
         });
+    }
+
+    @Override
+    protected void onRefresh() {
+        loadData();
     }
 }

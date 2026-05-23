@@ -1,25 +1,20 @@
 package com.example.frolovnails.admin;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.frolovnails.R;
 import com.example.frolovnails.adapters.ServicesAdminAdapter;
+import com.example.frolovnails.common.RefreshableFragment;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
-import com.example.frolovnails.network.models.request.ServiceRequest;
 import com.example.frolovnails.network.models.response.Service;
 import com.example.frolovnails.ui.ServiceDialog;
 import com.google.android.material.button.MaterialButton;
@@ -29,7 +24,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServicesAdminFragment extends Fragment {
+public class ServicesAdminFragment extends RefreshableFragment {
 
     private RecyclerView rvServices;
     private ProgressBar progressBar;
@@ -38,17 +33,18 @@ public class ServicesAdminFragment extends Fragment {
     private ServicesAdminAdapter adapter;
     private ServicesAdminViewModel viewModel;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_services_admin, container, false);
+    protected int getLayoutResId() {
+        return R.layout.fragment_services_admin;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    protected int getSwipeRefreshId() {
+        return R.id.swipeRefreshServices;
+    }
 
+    @Override
+    protected void initViews(View view) {
         rvServices = view.findViewById(R.id.rvServicesAdmin);
         progressBar = view.findViewById(R.id.progressBar);
         tvEmpty = view.findViewById(R.id.tvEmpty);
@@ -70,10 +66,8 @@ public class ServicesAdminFragment extends Fragment {
             @Override
             public void onToggleActiveClick(Service service) {
                 if (service.getActive() != null && service.getActive()) {
-                    // Деактивируем — DELETE
                     viewModel.deactivateService(service.getId());
                 } else {
-                    // Активируем — PATCH
                     viewModel.activateService(service.getId());
                 }
             }
@@ -86,7 +80,6 @@ public class ServicesAdminFragment extends Fragment {
             }
         });
 
-        // Инициализация ViewModel
         TokenManager tokenManager = null;
         try {
             tokenManager = new TokenManager(requireContext());
@@ -96,22 +89,22 @@ public class ServicesAdminFragment extends Fragment {
         final TokenManager finalTokenManager = tokenManager;
 
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @NonNull
             @Override
             public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
                 return (T) new ServicesAdminViewModel(finalTokenManager);
             }
         }).get(ServicesAdminViewModel.class);
+    }
 
-        // Наблюдатели
-        viewModel.getServicesResult().observe(getViewLifecycleOwner(), this::handleServicesResult);
-        viewModel.getCreateResult().observe(getViewLifecycleOwner(), this::handleCreateResult);
-        viewModel.getUpdateResult().observe(getViewLifecycleOwner(), this::handleUpdateResult);
-        viewModel.getActivateResult().observe(getViewLifecycleOwner(), this::handleActivateResult);
-        viewModel.getDeactivateResult().observe(getViewLifecycleOwner(), this::handleDeactivateResult);
-
-        // Загружаем все услуги
+    @Override
+    protected void loadData() {
         viewModel.loadAllServices();
+        viewModel.getServicesResult().observe(getViewLifecycleOwner(), this::handleServicesResult);
+    }
+
+    @Override
+    protected void onRefresh() {
+        loadData();
     }
 
     private void handleServicesResult(Resource<List<Service>> resource) {
@@ -139,42 +132,6 @@ public class ServicesAdminFragment extends Fragment {
             tvEmpty.setVisibility(View.VISIBLE);
             rvServices.setVisibility(View.GONE);
             tvEmpty.setText("Ошибка: " + ((Resource.Error<List<Service>>) resource).getMessage());
-        }
-    }
-
-    private void handleCreateResult(Resource<Service> resource) {
-        if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "Услуга добавлена", Toast.LENGTH_SHORT).show();
-            viewModel.loadAllServices();
-        } else if (resource instanceof Resource.Error) {
-            Toast.makeText(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void handleUpdateResult(Resource<Service> resource) {
-        if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "Услуга обновлена", Toast.LENGTH_SHORT).show();
-            viewModel.loadAllServices();
-        } else if (resource instanceof Resource.Error) {
-            Toast.makeText(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void handleActivateResult(Resource<Service> resource) {
-        if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "Услуга активирована", Toast.LENGTH_SHORT).show();
-            viewModel.loadAllServices();
-        } else if (resource instanceof Resource.Error) {
-            Toast.makeText(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void handleDeactivateResult(Resource<Void> resource) {
-        if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "Услуга деактивирована", Toast.LENGTH_SHORT).show();
-            viewModel.loadAllServices();
-        } else if (resource instanceof Resource.Error) {
-            Toast.makeText(getContext(), ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 }
