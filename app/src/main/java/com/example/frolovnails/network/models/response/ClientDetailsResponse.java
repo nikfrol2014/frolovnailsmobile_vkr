@@ -107,4 +107,50 @@ public class ClientDetailsResponse {
         public Double getAttendanceRate() { return attendanceRate; }
         public void setAttendanceRate(Double attendanceRate) { this.attendanceRate = attendanceRate; }
     }
+
+    public static class RecentAppointment {
+        private String startTime;
+        private Appointment.ServiceInfo service;
+        // геттеры/сеттеры
+
+
+        public String getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(String startTime) {
+            this.startTime = startTime;
+        }
+
+        public Appointment.ServiceInfo getService() {
+            return service;
+        }
+
+        public void setService(Appointment.ServiceInfo service) {
+            this.service = service;
+        }
+    }
+
+    public static class UpcomingAppointment {
+        private String startTime;
+        private Appointment.ServiceInfo service;
+        // геттеры/сеттеры
+
+
+        public String getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(String startTime) {
+            this.startTime = startTime;
+        }
+
+        public Appointment.ServiceInfo getService() {
+            return service;
+        }
+
+        public void setService(Appointment.ServiceInfo service) {
+            this.service = service;
+        }
+    }
 }

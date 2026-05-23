@@ -89,6 +89,13 @@ public interface ApiService {
             @Body CreateMasterAppointmentRequest request
     );
 
+    @GET("/api/clients")
+    Call<ApiResponse<ClientsListResponse>> getClients(
+            @Query("page") int page,
+            @Query("size") int size,
+            @Query("search") String search
+    );
+
     // ========== Управление услугами (админ) ==========
     @POST("/api/services")
     Call<ApiResponse<Service>> createService(@Body ServiceRequest request);
