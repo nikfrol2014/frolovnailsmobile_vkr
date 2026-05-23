@@ -3,6 +3,7 @@ package com.example.frolovnails.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -52,21 +53,34 @@ public class ClientsAdapter extends RecyclerView.Adapter<ClientsAdapter.ClientVi
     }
 
     static class ClientViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvPhone, tvVisits;
+        TextView tvAvatar, tvName, tvPhone, tvVisits, tvTotalSpent;
 
         ClientViewHolder(@NonNull View itemView) {
             super(itemView);
+            tvAvatar = itemView.findViewById(R.id.tvAvatar);
             tvName = itemView.findViewById(R.id.tvName);
             tvPhone = itemView.findViewById(R.id.tvPhone);
             tvVisits = itemView.findViewById(R.id.tvVisits);
+            tvTotalSpent = itemView.findViewById(R.id.tvTotalSpent);
         }
 
         void bind(ClientListItem client, OnClientClickListener listener) {
-            String fullName = (client.getFirstName() != null ? client.getFirstName() : "") + " " +
-                    (client.getLastName() != null ? client.getLastName() : "");
+            String firstName = client.getFirstName() != null ? client.getFirstName() : "";
+            String lastName = client.getLastName() != null ? client.getLastName() : "";
+            String fullName = firstName + " " + lastName;
             tvName.setText(fullName.trim().isEmpty() ? "Без имени" : fullName.trim());
+
+            // Аватар (первая буква имени)
+            String firstLetter = firstName.length() > 0 ? String.valueOf(firstName.charAt(0)).toUpperCase() : "?";
+            tvAvatar.setText(firstLetter);
+
             tvPhone.setText(client.getPhone() != null ? client.getPhone() : "Нет телефона");
-            tvVisits.setText("Визитов: " + (client.getTotalVisits() != null ? client.getTotalVisits() : 0));
+
+            int visits = client.getTotalVisits() != null ? client.getTotalVisits() : 0;
+            tvVisits.setText(visits + " визитов");
+
+            // Показываем заглушку для потраченной суммы (если нет данных)
+            tvTotalSpent.setText("— ₽");
 
             itemView.setOnClickListener(v -> {
                 if (listener != null) {

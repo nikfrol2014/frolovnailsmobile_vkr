@@ -10,8 +10,14 @@ import com.example.frolovnails.network.ApiClient;
 import com.example.frolovnails.network.ApiService;
 import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.ClientDetailsResponse;
+import com.example.frolovnails.network.models.response.ClientListItem;
 import com.example.frolovnails.network.models.response.ClientsListResponse;
 import com.example.frolovnails.network.models.request.UpdateClientRequest;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -23,6 +29,11 @@ public class ClientViewModel extends ViewModel {
     private final MutableLiveData<Resource<ClientsListResponse>> clientsResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<ClientDetailsResponse>> clientDetailsResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> updateClientResult = new MutableLiveData<>();
+
+    // Для сортировки и поиска на клиенте
+    private List<ClientListItem> allClients = new ArrayList<>();
+    private String currentSearchQuery = "";
+    private String currentSortType = "name"; // name, visits, spent
 
     public ClientViewModel(TokenManager tokenManager) {
         this.apiService = ApiClient.getClient(tokenManager).create(ApiService.class);
@@ -49,7 +60,8 @@ public class ClientViewModel extends ViewModel {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     ClientsListResponse data = response.body().getData();
                     if (data != null) {
-                        clientsResult.setValue(new Resource.Success<>(data));
+                        allClients = data.getClients() != null ? data.getClients() : new ArrayList<>();
+                        applyFiltersAndSort();
                     } else {
                         clientsResult.setValue(new Resource.Error<>("Нет данных"));
                     }
@@ -64,6 +76,66 @@ public class ClientViewModel extends ViewModel {
                 clientsResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
             }
         });
+    }
+
+    // Поиск (фильтрация на клиенте)
+    public void search(String query) {
+        this.currentSearchQuery = query;
+        applyFiltersAndSort();
+    }
+
+    // Сортировка
+    public void sortBy(String sortType) {
+        this.currentSortType = sortType;
+        applyFiltersAndSort();
+    }
+
+    private void applyFiltersAndSort() {
+        List<ClientListItem> filtered = new ArrayList<>(allClients);
+
+        // Фильтрация по поисковому запросу
+        if (currentSearchQuery != null && !currentSearchQuery.isEmpty()) {
+            String lowerQuery = currentSearchQuery.toLowerCase();
+            filtered.removeIf(client ->
+                    (client.getFirstName() == null || !client.getFirstName().toLowerCase().contains(lowerQuery)) &&
+                            (client.getLastName() == null || !client.getLastName().toLowerCase().contains(lowerQuery)) &&
+                            (client.getPhone() == null || !client.getPhone().toLowerCase().contains(lowerQuery))
+            );
+        }
+
+        // Сортировка
+        switch (currentSortType) {
+            case "name":
+                filtered.sort((a, b) -> {
+                    String nameA = (a.getFirstName() != null ? a.getFirstName() : "") + " " + (a.getLastName() != null ? a.getLastName() : "");
+                    String nameB = (b.getFirstName() != null ? b.getFirstName() : "") + " " + (b.getLastName() != null ? b.getLastName() : "");
+                    return nameA.compareToIgnoreCase(nameB);
+                });
+                break;
+            case "visits":
+                filtered.sort((a, b) -> {
+                    int visitsA = a.getTotalVisits() != null ? a.getTotalVisits() : 0;
+                    int visitsB = b.getTotalVisits() != null ? b.getTotalVisits() : 0;
+                    return Integer.compare(visitsB, visitsA); // по убыванию
+                });
+                break;
+            case "spent":
+                // Для spent нужно загружать с сервера, пока сортируем по визитам
+                filtered.sort((a, b) -> {
+                    int visitsA = a.getTotalVisits() != null ? a.getTotalVisits() : 0;
+                    int visitsB = b.getTotalVisits() != null ? b.getTotalVisits() : 0;
+                    return Integer.compare(visitsB, visitsA);
+                });
+                break;
+        }
+
+        ClientsListResponse response = new ClientsListResponse();
+        response.setClients(filtered);
+        response.setTotal((long) filtered.size());
+        response.setPage(0);
+        response.setSize(filtered.size());
+        response.setTotalPages(1);
+        clientsResult.setValue(new Resource.Success<>(response));
     }
 
     public void loadClientDetails(Long clientId) {

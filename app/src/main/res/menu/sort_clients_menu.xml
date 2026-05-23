@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/sort_by_name"
+        android:title="По имени (А→Я)" />
+    <item
+        android:id="@+id/sort_by_visits"
+        android:title="По количеству визитов" />
+    <item
+        android:id="@+id/sort_by_spent"
+        android:title="По сумме потраченного" />
+</menu>

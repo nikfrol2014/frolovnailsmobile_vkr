@@ -6,6 +6,7 @@ public class ClientListItem {
     private String lastName;
     private String phone;
     private Integer totalVisits;
+    private Integer totalSpent;  // добавить, если есть на сервере
 
     public ClientListItem() {}
 
@@ -23,4 +24,12 @@ public class ClientListItem {
 
     public Integer getTotalVisits() { return totalVisits; }
     public void setTotalVisits(Integer totalVisits) { this.totalVisits = totalVisits; }
+
+    public Integer getTotalSpent() {
+        return totalSpent;
+    }
+
+    public void setTotalSpent(Integer totalSpent) {
+        this.totalSpent = totalSpent;
+    }
 }
