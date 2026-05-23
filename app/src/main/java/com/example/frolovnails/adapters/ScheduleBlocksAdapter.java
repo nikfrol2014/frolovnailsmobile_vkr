@@ -70,7 +70,15 @@ public class ScheduleBlocksAdapter extends RecyclerView.Adapter<ScheduleBlocksAd
             tvNotes.setText(item.getNotes() != null ? item.getNotes() : "");
 
             btnDelete.setOnClickListener(v -> {
-                if (listener != null) listener.onDeleteClick(item);
+                new androidx.appcompat.app.AlertDialog.Builder(v.getContext())
+                        .setTitle("Удаление блокировки")
+                        .setMessage("Вы уверены, что хотите удалить блокировку?\n" +
+                                item.getStartTime() + " — " + item.getEndTime())
+                        .setPositiveButton("Да", (dialog, which) -> {
+                            if (listener != null) listener.onDeleteClick(item);
+                        })
+                        .setNegativeButton("Нет", null)
+                        .show();
             });
         }
     }

@@ -74,8 +74,17 @@ public class AvailableDaysAdapter extends RecyclerView.Adapter<AvailableDaysAdap
             btnEdit.setOnClickListener(v -> {
                 if (listener != null) listener.onEditClick(item);
             });
+
             btnDelete.setOnClickListener(v -> {
-                if (listener != null) listener.onDeleteClick(item);
+                new androidx.appcompat.app.AlertDialog.Builder(v.getContext())
+                        .setTitle("Удаление рабочего дня")
+                        .setMessage("Вы уверены, что хотите удалить рабочий день\n" +
+                                item.getAvailableDate() + " " + item.getWorkStart() + "—" + item.getWorkEnd() + "?")
+                        .setPositiveButton("Да", (dialog, which) -> {
+                            if (listener != null) listener.onDeleteClick(item);
+                        })
+                        .setNegativeButton("Нет", null)
+                        .show();
             });
         }
     }

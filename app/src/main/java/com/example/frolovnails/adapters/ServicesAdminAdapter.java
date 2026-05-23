@@ -97,9 +97,18 @@ public class ServicesAdminAdapter extends RecyclerView.Adapter<ServicesAdminAdap
             });
 
             btnToggleActive.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onToggleActiveClick(service);
-                }
+                new androidx.appcompat.app.AlertDialog.Builder(v.getContext())
+                        .setTitle(service.getActive() ? "Деактивация услуги" : "Активация услуги")
+                        .setMessage(service.getActive()
+                                ? "Вы уверены, что хотите деактивировать услугу \"" + service.getName() + "\"?\nОна пропадёт из списка доступных для клиентов."
+                                : "Вы уверены, что хотите активировать услугу \"" + service.getName() + "\"?")
+                        .setPositiveButton("Да", (dialog, which) -> {
+                            if (listener != null) {
+                                listener.onToggleActiveClick(service);
+                            }
+                        })
+                        .setNegativeButton("Нет", null)
+                        .show();
             });
         }
     }

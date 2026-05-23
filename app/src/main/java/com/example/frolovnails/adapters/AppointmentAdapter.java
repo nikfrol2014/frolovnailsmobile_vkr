@@ -90,10 +90,20 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
                     tvStatus.setTextColor(0xFF9E9E9E);
             }
 
-            itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onAppointmentClick(appointment);
-                }
+            itemView.setOnLongClickListener(v -> {
+                // Долгий тап для отмены записи
+                new androidx.appcompat.app.AlertDialog.Builder(v.getContext())
+                        .setTitle("Отмена записи")
+                        .setMessage("Вы уверены, что хотите отменить запись?\n" +
+                                "Клиент: " + appointment.getClient().getFirstName() + " " + appointment.getClient().getLastName() + "\n" +
+                                "Услуга: " + appointment.getService().getName() + "\n" +
+                                "Время: " + appointment.getStartTime())
+                        .setPositiveButton("Отменить", (dialog, which) -> {
+                            // TODO: вызвать API для отмены записи
+                        })
+                        .setNegativeButton("Нет", null)
+                        .show();
+                return true;
             });
         }
     }
