@@ -40,7 +40,7 @@ public class ServiceDialog extends DialogFragment {
     private View progressBar;
     private ServicesAdminViewModel viewModel;
 
-    private Long editingServiceId;
+    private Long editingServiceId = null;
     private String editingName;
     private String editingDescription;
     private int editingDuration;
@@ -54,12 +54,12 @@ public class ServiceDialog extends DialogFragment {
     public static ServiceDialog newInstance(Service service) {
         ServiceDialog fragment = new ServiceDialog();
         Bundle args = new Bundle();
-        args.putLong("service_id", service.getId());
-        args.putString("service_name", service.getName());
-        args.putString("service_description", service.getDescription());
-        args.putInt("service_duration", service.getDurationMinutes());
-        args.putSerializable("service_price", service.getPrice());
-        args.putString("service_category", service.getCategory());
+        args.putLong(ARG_SERVICE_ID, service.getId());
+        args.putString(ARG_SERVICE_NAME, service.getName());
+        args.putString(ARG_SERVICE_DESCRIPTION, service.getDescription());
+        args.putInt(ARG_SERVICE_DURATION, service.getDurationMinutes());
+        args.putSerializable(ARG_SERVICE_PRICE, service.getPrice());
+        args.putString(ARG_SERVICE_CATEGORY, service.getCategory());
         fragment.setArguments(args);
         return fragment;
     }
@@ -67,8 +67,8 @@ public class ServiceDialog extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            editingServiceId = getArguments().getLong(ARG_SERVICE_ID, -1);
+        if (getArguments() != null && getArguments().containsKey(ARG_SERVICE_ID)) {
+            editingServiceId = getArguments().getLong(ARG_SERVICE_ID);
             editingName = getArguments().getString(ARG_SERVICE_NAME);
             editingDescription = getArguments().getString(ARG_SERVICE_DESCRIPTION);
             editingDuration = getArguments().getInt(ARG_SERVICE_DURATION);
@@ -81,7 +81,7 @@ public class ServiceDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
-        if (editingServiceId != -1) {
+        if (editingServiceId != null) {
             dialog.setTitle("Редактирование услуги");
         } else {
             dialog.setTitle("Добавление услуги");
@@ -100,7 +100,6 @@ public class ServiceDialog extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-
         etName = view.findViewById(R.id.etName);
         etDescription = view.findViewById(R.id.etDescription);
         etDuration = view.findViewById(R.id.etDuration);
@@ -110,17 +109,18 @@ public class ServiceDialog extends DialogFragment {
         btnCancel = view.findViewById(R.id.btnCancel);
         progressBar = view.findViewById(R.id.progressBar);
 
+        // Настройка ввода
         etName.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         etDescription.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         etCategory.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
 
         // Заполняем поля при редактировании
-        if (editingServiceId != -1) {
-            etName.setText(editingName);
-            etDescription.setText(editingDescription);
+        if (editingServiceId != null) {
+            etName.setText(editingName != null ? editingName : "");
+            etDescription.setText(editingDescription != null ? editingDescription : "");
             etDuration.setText(String.valueOf(editingDuration));
             etPrice.setText(editingPrice != null ? editingPrice.toString() : "");
-            etCategory.setText(editingCategory);
+            etCategory.setText(editingCategory != null ? editingCategory : "");
         }
 
         // Инициализация ViewModel
@@ -185,7 +185,7 @@ public class ServiceDialog extends DialogFragment {
         request.setPrice(price);
         request.setCategory(category);
 
-        if (editingServiceId != -1) {
+        if (editingServiceId != null) {
             viewModel.updateService(editingServiceId, request);
             viewModel.getUpdateResult().observe(getViewLifecycleOwner(), this::handleUpdateResult);
         } else {
