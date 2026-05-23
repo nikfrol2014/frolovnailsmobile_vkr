@@ -1,9 +1,11 @@
 package com.example.frolovnails.network.models.response;
 
-public class ScheduleBlock {
+import java.io.Serializable;
+
+public class ScheduleBlock implements Serializable {
     private Long id;
-    private String startTime;
-    private String endTime;
+    private String startTime;   // dd.MM.yyyy HH:mm
+    private String endTime;     // dd.MM.yyyy HH:mm
     private String reason;
     private String notes;
     private Boolean isBlocked;

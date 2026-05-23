@@ -118,8 +118,17 @@ public interface ApiService {
     @DELETE("/api/services/{id}")
     Call<ApiResponse<Void>> deactivateService(@Path("id") Long id);
 
-    // ========== Управление расписанием (админ) ==========
-    @POST("/api/schedule/available-days")
+// ========== Управление расписанием (админ) ==========
+
+    // Получить доступные дни
+    @GET("/api/schedule/admin/available-days")
+    Call<ApiResponse<AvailableDaysResponse>> getAvailableDaysForAdmin(
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate
+    );
+
+    // Добавить доступный день
+    @POST("/api/schedule/admin/available-days")
     Call<ApiResponse<AvailableDay>> addAvailableDay(
             @Query("date") String date,
             @Query("workStart") String workStart,
@@ -127,18 +136,34 @@ public interface ApiService {
             @Query("notes") String notes
     );
 
+    // Обновить доступный день
+    @PUT("/api/schedule/available-days/{id}")
+    Call<ApiResponse<AvailableDay>> updateAvailableDay(
+            @Path("id") Long id,
+            @Query("workStart") String workStart,
+            @Query("workEnd") String workEnd,
+            @Query("isAvailable") Boolean isAvailable,
+            @Query("notes") String notes
+    );
+
+    // Удалить доступный день
     @DELETE("/api/schedule/available-days/{id}")
     Call<ApiResponse<Void>> deleteAvailableDay(@Path("id") Long id);
 
-    @POST("/api/schedule/blocks")
-    Call<ApiResponse<ScheduleBlock>> createScheduleBlock(@Body CreateScheduleBlockRequest request);
-
-    @DELETE("/api/schedule/blocks/{id}")
-    Call<ApiResponse<Void>> deleteScheduleBlock(@Path("id") Long id);
-
+    // Получить блокировки
     @GET("/api/schedule/blocks")
-    Call<ApiResponse<List<ScheduleBlock>>> getScheduleBlocks(
+    Call<ApiResponse<ScheduleBlocksResponse>> getScheduleBlocks(
             @Query("startDate") String startDate,
             @Query("endDate") String endDate
     );
+
+    // Добавить блокировку
+    @POST("/api/schedule/blocks")
+    Call<ApiResponse<ScheduleBlock>> addScheduleBlock(@Body CreateScheduleBlockRequest request);
+
+    // Удалить блокировку
+    @DELETE("/api/schedule/blocks/{id}")
+    Call<ApiResponse<Void>> deleteScheduleBlock(@Path("id") Long id);
+
+
 }

@@ -1,10 +1,12 @@
 package com.example.frolovnails.network.models.response;
 
-public class AvailableDay {
+import java.io.Serializable;
+
+public class AvailableDay implements Serializable {
     private Long id;
-    private String availableDate;
-    private String workStart;
-    private String workEnd;
+    private String availableDate;  // dd.MM.yyyy
+    private String workStart;      // HH:mm
+    private String workEnd;        // HH:mm
     private Boolean isAvailable;
     private String notes;
 
