@@ -1,7 +1,5 @@
 package com.example.frolovnails.network;
 
-import android.util.Log;
-
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -9,9 +7,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.interceptors.JwtInterceptor;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 public class ApiClient {
     private static final String BASE_URL = "http://192.168.0.111:8080/";
-    private static Retrofit retrofit = null;
 
     public static Retrofit getClient(TokenManager tokenManager) {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
@@ -21,11 +21,7 @@ public class ApiClient {
         httpClient.addInterceptor(logging);
 
         if (tokenManager != null) {
-            JwtInterceptor interceptor = new JwtInterceptor(tokenManager);
-            httpClient.addInterceptor(interceptor);
-            Log.d("ApiClient", "JwtInterceptor added");
-        } else {
-            Log.d("ApiClient", "TokenManager is null, no interceptor");
+            httpClient.addInterceptor(new JwtInterceptor(tokenManager));
         }
 
         return new Retrofit.Builder()

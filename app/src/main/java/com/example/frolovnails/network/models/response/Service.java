@@ -3,9 +3,11 @@ package com.example.frolovnails.network.models.response;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class Service {
+public class Service implements Serializable {
     private Long id;
     private String name;
     private String description;

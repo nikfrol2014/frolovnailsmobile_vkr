@@ -1,0 +1,230 @@
+package com.example.frolovnails.ui;
+
+import android.app.Dialog;
+import android.os.Bundle;
+import android.text.InputType;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.frolovnails.R;
+import com.example.frolovnails.admin.ServicesAdminViewModel;
+import com.example.frolovnails.common.Resource;
+import com.example.frolovnails.common.TokenManager;
+import com.example.frolovnails.network.models.request.ServiceRequest;
+import com.example.frolovnails.network.models.response.Service;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.security.GeneralSecurityException;
+
+public class ServiceDialog extends DialogFragment {
+
+    private static final String ARG_SERVICE_ID = "service_id";
+    private static final String ARG_SERVICE_NAME = "service_name";
+    private static final String ARG_SERVICE_DESCRIPTION = "service_description";
+    private static final String ARG_SERVICE_DURATION = "service_duration";
+    private static final String ARG_SERVICE_PRICE = "service_price";
+    private static final String ARG_SERVICE_CATEGORY = "service_category";
+
+    private EditText etName, etDescription, etDuration, etPrice, etCategory;
+    private Button btnSave, btnCancel;
+    private View progressBar;
+    private ServicesAdminViewModel viewModel;
+
+    private Long editingServiceId;
+    private String editingName;
+    private String editingDescription;
+    private int editingDuration;
+    private BigDecimal editingPrice;
+    private String editingCategory;
+
+    public static ServiceDialog newInstance() {
+        return new ServiceDialog();
+    }
+
+    public static ServiceDialog newInstance(Service service) {
+        ServiceDialog fragment = new ServiceDialog();
+        Bundle args = new Bundle();
+        args.putLong("service_id", service.getId());
+        args.putString("service_name", service.getName());
+        args.putString("service_description", service.getDescription());
+        args.putInt("service_duration", service.getDurationMinutes());
+        args.putSerializable("service_price", service.getPrice());
+        args.putString("service_category", service.getCategory());
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            editingServiceId = getArguments().getLong(ARG_SERVICE_ID, -1);
+            editingName = getArguments().getString(ARG_SERVICE_NAME);
+            editingDescription = getArguments().getString(ARG_SERVICE_DESCRIPTION);
+            editingDuration = getArguments().getInt(ARG_SERVICE_DURATION);
+            editingPrice = (BigDecimal) getArguments().getSerializable(ARG_SERVICE_PRICE);
+            editingCategory = getArguments().getString(ARG_SERVICE_CATEGORY);
+        }
+    }
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        if (editingServiceId != -1) {
+            dialog.setTitle("Редактирование услуги");
+        } else {
+            dialog.setTitle("Добавление услуги");
+        }
+        return dialog;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.dialog_service, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+
+        etName = view.findViewById(R.id.etName);
+        etDescription = view.findViewById(R.id.etDescription);
+        etDuration = view.findViewById(R.id.etDuration);
+        etPrice = view.findViewById(R.id.etPrice);
+        etCategory = view.findViewById(R.id.etCategory);
+        btnSave = view.findViewById(R.id.btnSave);
+        btnCancel = view.findViewById(R.id.btnCancel);
+        progressBar = view.findViewById(R.id.progressBar);
+
+        etName.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        etDescription.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        etCategory.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+
+        // Заполняем поля при редактировании
+        if (editingServiceId != -1) {
+            etName.setText(editingName);
+            etDescription.setText(editingDescription);
+            etDuration.setText(String.valueOf(editingDuration));
+            etPrice.setText(editingPrice != null ? editingPrice.toString() : "");
+            etCategory.setText(editingCategory);
+        }
+
+        // Инициализация ViewModel
+        TokenManager tokenManager = null;
+        try {
+            tokenManager = new TokenManager(requireContext());
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+        }
+        final TokenManager finalTokenManager = tokenManager;
+
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new ServicesAdminViewModel(finalTokenManager);
+            }
+        }).get(ServicesAdminViewModel.class);
+
+        btnSave.setOnClickListener(v -> saveService());
+        btnCancel.setOnClickListener(v -> dismiss());
+    }
+
+    private void saveService() {
+        String name = etName.getText().toString().trim();
+        String description = etDescription.getText().toString().trim();
+        String durationStr = etDuration.getText().toString().trim();
+        String priceStr = etPrice.getText().toString().trim();
+        String category = etCategory.getText().toString().trim();
+
+        if (name.isEmpty()) {
+            Toast.makeText(getContext(), "Введите название услуги", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (durationStr.isEmpty()) {
+            Toast.makeText(getContext(), "Введите длительность", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (priceStr.isEmpty()) {
+            Toast.makeText(getContext(), "Введите цену", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (category.isEmpty()) {
+            Toast.makeText(getContext(), "Введите категорию", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int duration;
+        BigDecimal price;
+        try {
+            duration = Integer.parseInt(durationStr);
+            price = new BigDecimal(priceStr);
+        } catch (NumberFormatException e) {
+            Toast.makeText(getContext(), "Неверный формат числа", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ServiceRequest request = new ServiceRequest();
+        request.setName(name);
+        request.setDescription(description);
+        request.setDurationMinutes(duration);
+        request.setPrice(price);
+        request.setCategory(category);
+
+        if (editingServiceId != -1) {
+            viewModel.updateService(editingServiceId, request);
+            viewModel.getUpdateResult().observe(getViewLifecycleOwner(), this::handleUpdateResult);
+        } else {
+            viewModel.createService(request);
+            viewModel.getCreateResult().observe(getViewLifecycleOwner(), this::handleCreateResult);
+        }
+    }
+
+    private void handleCreateResult(Resource<Service> resource) {
+        if (resource == null) return;
+
+        if (resource instanceof Resource.Loading) {
+            progressBar.setVisibility(View.VISIBLE);
+            btnSave.setEnabled(false);
+        } else if (resource instanceof Resource.Success) {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "Услуга добавлена", Toast.LENGTH_SHORT).show();
+            dismiss();
+        } else if (resource instanceof Resource.Error) {
+            progressBar.setVisibility(View.GONE);
+            btnSave.setEnabled(true);
+            Toast.makeText(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleUpdateResult(Resource<Service> resource) {
+        if (resource == null) return;
+
+        if (resource instanceof Resource.Loading) {
+            progressBar.setVisibility(View.VISIBLE);
+            btnSave.setEnabled(false);
+        } else if (resource instanceof Resource.Success) {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "Услуга обновлена", Toast.LENGTH_SHORT).show();
+            dismiss();
+        } else if (resource instanceof Resource.Error) {
+            progressBar.setVisibility(View.GONE);
+            btnSave.setEnabled(true);
+            Toast.makeText(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+}

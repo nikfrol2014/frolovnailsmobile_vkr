@@ -97,12 +97,24 @@ public interface ApiService {
     );
 
     // ========== Управление услугами (админ) ==========
+
+    // Получить все услуги (активные и неактивные)
+    @GET("/api/services/all")
+    Call<ApiResponse<List<Service>>> getAllServices();
+
+    // Создать услугу
     @POST("/api/services")
     Call<ApiResponse<Service>> createService(@Body ServiceRequest request);
 
+    // Обновить услугу (PUT)
     @PUT("/api/services/{id}")
     Call<ApiResponse<Service>> updateService(@Path("id") Long id, @Body ServiceRequest request);
 
+    // Активировать услугу (PATCH)
+    @PATCH("/api/services/{id}/activate")
+    Call<ApiResponse<Service>> activateService(@Path("id") Long id);
+
+    // Деактивировать услугу (DELETE)
     @DELETE("/api/services/{id}")
     Call<ApiResponse<Void>> deactivateService(@Path("id") Long id);
 
