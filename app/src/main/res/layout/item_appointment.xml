@@ -50,22 +50,21 @@
             android:textColor="@android:color/holo_blue_dark"
             android:visibility="gone" />
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:gravity="end">
-
-        <Button
-            android:id="@+id/btnMasterNotes"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Заметка"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:drawableStart="@android:drawable/ic_menu_edit" />
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btnMasterNotes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Заметка"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
