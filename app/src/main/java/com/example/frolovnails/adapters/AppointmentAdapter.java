@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.frolovnails.R;
 import com.example.frolovnails.network.models.response.Appointment;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,6 +64,7 @@ public class AppointmentAdapter extends RecyclerView.Adapter<AppointmentAdapter.
             tvClient = itemView.findViewById(R.id.tvClient);
             tvService = itemView.findViewById(R.id.tvService);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            tvMasterNotes = itemView.findViewById(R.id.tvMasterNotes);  // ← ДОБАВЛЕНО
             btnMasterNotes = itemView.findViewById(R.id.btnMasterNotes);
         }
 

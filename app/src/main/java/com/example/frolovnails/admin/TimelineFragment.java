@@ -37,6 +37,7 @@ public class TimelineFragment extends Fragment {
     private TextView tvCurrentDate;
     private Button btnPrevDay, btnNextDay, btnToday;
     private CalendarViewModel viewModel;
+    private boolean isInitialized = false;
 
     private Calendar currentCalendar = Calendar.getInstance();
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
@@ -59,6 +60,54 @@ public class TimelineFragment extends Fragment {
         btnNextDay = view.findViewById(R.id.btnNextDay);
         btnToday = view.findViewById(R.id.btnToday);
 
+        timelineView.setOnNotesClickListener(appointment -> {
+            MasterNotesDialog dialog = MasterNotesDialog.newInstance(appointment);
+            dialog.show(getChildFragmentManager(), "master_notes");
+        });
+
+        TokenManager tokenManager = null;
+        try {
+            tokenManager = new TokenManager(requireContext());
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+        }
+        final TokenManager finalTokenManager = tokenManager;
+
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new CalendarViewModel(finalTokenManager);
+            }
+        }).get(CalendarViewModel.class);
+
+        setupNavigation();
+        isInitialized = true;
+
+        // Если есть аргументы из навигации (первый запуск)
+        if (getArguments() != null) {
+            long dateMillis = getArguments().getLong("selected_date_millis", -1);
+            if (dateMillis != -1) {
+                currentCalendar.setTimeInMillis(dateMillis);
+                updateDateDisplay();
+                loadDataForDate();
+            } else {
+                loadData();
+            }
+        } else {
+            loadData();
+        }
+    }
+
+    public void setDate(long dateMillis) {
+        if (isInitialized) {
+            currentCalendar.setTimeInMillis(dateMillis);
+            updateDateDisplay();
+            loadDataForDate();
+        }
+    }
+
+    private void setupNavigation() {
         updateDateDisplay();
 
         btnPrevDay.setOnClickListener(v -> {
@@ -78,30 +127,6 @@ public class TimelineFragment extends Fragment {
             updateDateDisplay();
             loadData();
         });
-
-        timelineView.setOnNotesClickListener(appointment -> {
-            MasterNotesDialog dialog = MasterNotesDialog.newInstance(appointment);
-            dialog.show(getChildFragmentManager(), "master_notes");
-            // Убираем setOnDismissListener, обновление будет в onResume
-        });
-
-        TokenManager tokenManager = null;
-        try {
-            tokenManager = new TokenManager(requireContext());
-        } catch (GeneralSecurityException | IOException e) {
-            e.printStackTrace();
-        }
-        final TokenManager finalTokenManager = tokenManager;
-
-        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @NonNull
-            @Override
-            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
-                return (T) new CalendarViewModel(finalTokenManager);
-            }
-        }).get(CalendarViewModel.class);
-
-        loadData();
     }
 
     private void updateDateDisplay() {
@@ -109,8 +134,14 @@ public class TimelineFragment extends Fragment {
     }
 
     private void loadData() {
-        // Используем метод без startDate
+        String startDate = dateFormat.format(currentCalendar.getTime());
         viewModel.loadTimeline(7);
+        viewModel.getTimelineResult().observe(getViewLifecycleOwner(), this::handleTimelineResult);
+    }
+
+    private void loadDataForDate() {
+        String startDate = dateFormat.format(currentCalendar.getTime());
+        viewModel.loadTimeline(1);
         viewModel.getTimelineResult().observe(getViewLifecycleOwner(), this::handleTimelineResult);
     }
 

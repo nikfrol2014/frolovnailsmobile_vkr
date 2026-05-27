@@ -1,194 +1,89 @@
 package com.example.frolovnails.admin;
 
+import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.frolovnails.R;
-import com.example.frolovnails.adapters.AppointmentAdapter;
-import com.example.frolovnails.adapters.DateAdapter;
-import com.example.frolovnails.common.RefreshableFragment;
-import com.example.frolovnails.common.Resource;
-import com.example.frolovnails.common.TokenManager;
-import com.example.frolovnails.network.models.response.Appointment;
-import com.example.frolovnails.network.models.response.TimelineResponse;
-import com.example.frolovnails.ui.MasterNotesDialog;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+public class CalendarFragment extends Fragment implements MonthCalendarFragment.OnDaySelectedListener {
 
-public class CalendarFragment extends RefreshableFragment {
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager;
 
-    private RecyclerView rvDates, rvAppointments;
-    private ProgressBar progressBar;
-    private TextView tvEmpty, tvStats;
-    private CalendarViewModel viewModel;
-    private DateAdapter dateAdapter;
-    private AppointmentAdapter appointmentAdapter;
-    private List<String> datesList = new ArrayList<>();
-    private Map<String, List<Appointment>> appointmentsByDay = new HashMap<>();
-
+    @Nullable
     @Override
-    protected int getLayoutResId() {
-        return R.layout.fragment_calendar;
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_calendar, container, false);
     }
 
     @Override
-    protected int getSwipeRefreshId() {
-        return R.id.swipeRefreshCalendar;
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        tabLayout = view.findViewById(R.id.tabLayout);
+        viewPager = view.findViewById(R.id.viewPager);
+
+        viewPager.setAdapter(new CalendarPagerAdapter(this));
+
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+            if (position == 0) {
+                tab.setText("Таймлайн");
+            } else {
+                tab.setText("Месяц");
+            }
+        }).attach();
     }
 
     @Override
-    protected void initViews(View view) {
-        rvDates = view.findViewById(R.id.rvDates);
-        rvAppointments = view.findViewById(R.id.rvAppointments);
-        progressBar = view.findViewById(R.id.progressBar);
-        tvEmpty = view.findViewById(R.id.tvEmpty);
-        tvStats = view.findViewById(R.id.tvStats);
+    public void onDaySelected(long dateMillis) {
+        Bundle bundle = new Bundle();
+        bundle.putLong("selected_date_millis", dateMillis);
 
-        rvDates.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-        dateAdapter = new DateAdapter();
-        rvDates.setAdapter(dateAdapter);
-
-        rvAppointments.setLayoutManager(new LinearLayoutManager(getContext()));
-        appointmentAdapter = new AppointmentAdapter();
-        rvAppointments.setAdapter(appointmentAdapter);
-
-        // Обработчик кликов по записям
-        appointmentAdapter.setOnAppointmentClickListener(new AppointmentAdapter.OnAppointmentClickListener() {
-            @Override
-            public void onAppointmentClick(Appointment appointment) {
-                // Пока пусто, можно добавить открытие деталей клиента
-            }
-
-            @Override
-            public void onMasterNotesClick(Appointment appointment) {
-                MasterNotesDialog dialog = MasterNotesDialog.newInstance(appointment);
-                dialog.show(getChildFragmentManager(), "master_notes");
-//                dialog.getDialog().setOnDismissListener(d -> loadData());
-            }
-        });
-
-        dateAdapter.setOnDateClickListener((date, position) -> {
-            dateAdapter.setSelectedPosition(position);
-            showAppointmentsForDate(date);
-        });
-
-        TokenManager tokenManager = null;
-        try {
-            tokenManager = new TokenManager(requireContext());
-        } catch (GeneralSecurityException | IOException e) {
-            e.printStackTrace();
-        }
-        final TokenManager finalTokenManager = tokenManager;
-
-        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @Override
-            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
-                return (T) new CalendarViewModel(finalTokenManager);
-            }
-        }).get(CalendarViewModel.class);
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.action_calendar_to_timeline, bundle);
     }
 
-    @Override
-    protected void loadData() {
-        viewModel.loadTimeline(7);
-        viewModel.getTimelineResult().observe(getViewLifecycleOwner(), this::handleTimelineResult);
-    }
+    public void switchToTimeline(long dateMillis) {
+        // Переключаемся на вкладку "Таймлайн"
+        viewPager.setCurrentItem(0, true);
 
-    @Override
-    protected void onRefresh() {
-        loadData();
-    }
-
-    private void handleTimelineResult(Resource<TimelineResponse> resource) {
-        if (resource == null) return;
-
-        if (resource instanceof Resource.Loading) {
-            progressBar.setVisibility(View.VISIBLE);
-            rvDates.setVisibility(View.GONE);
-            rvAppointments.setVisibility(View.GONE);
-            tvEmpty.setVisibility(View.GONE);
-            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
-        } else if (resource instanceof Resource.Success) {
-            progressBar.setVisibility(View.GONE);
-            TimelineResponse response = ((Resource.Success<TimelineResponse>) resource).getData();
-
-            if (response == null) {
-                tvEmpty.setVisibility(View.VISIBLE);
-                tvEmpty.setText("Нет данных");
-                return;
-            }
-
-            appointmentsByDay = response.getAppointmentsByDay();
-
-            if (appointmentsByDay == null || appointmentsByDay.isEmpty()) {
-                tvEmpty.setVisibility(View.VISIBLE);
-                tvEmpty.setText("Нет записей");
-                rvDates.setVisibility(View.GONE);
-                rvAppointments.setVisibility(View.GONE);
-                return;
-            }
-
-            datesList = new ArrayList<>(appointmentsByDay.keySet());
-            datesList.sort(String::compareTo);
-            dateAdapter.setDates(datesList);
-            rvDates.setVisibility(View.VISIBLE);
-            rvAppointments.setVisibility(View.VISIBLE);
-
-            TimelineResponse.TimelineStats stats = response.getStats();
-            if (stats != null) {
-                String statsText = "✅ " + stats.getConfirmedCount() +
-                        " | ⏳ " + stats.getPendingCount() +
-                        " | ❌ " + stats.getCancelledCount() +
-                        " | ✔️ " + stats.getCompletedCount();
-                tvStats.setText(statsText);
-            }
-
-            if (!datesList.isEmpty()) {
-                dateAdapter.setSelectedPosition(0);
-                showAppointmentsForDate(datesList.get(0));
-            }
-
-            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
-        } else if (resource instanceof Resource.Error) {
-            progressBar.setVisibility(View.GONE);
-            tvEmpty.setVisibility(View.VISIBLE);
-            rvDates.setVisibility(View.GONE);
-            rvAppointments.setVisibility(View.GONE);
-            tvEmpty.setText("Ошибка: " + ((Resource.Error<TimelineResponse>) resource).getMessage());
-            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
+        // Получаем TimelineFragment из ViewPager2
+        Fragment fragment = getChildFragmentManager().findFragmentByTag("f0");
+        if (fragment instanceof TimelineFragment) {
+            ((TimelineFragment) fragment).setDate(dateMillis);
         }
     }
 
-    private void showAppointmentsForDate(String date) {
-        if (appointmentsByDay == null || appointmentsByDay.isEmpty()) {
-            appointmentAdapter.setAppointments(new ArrayList<>());
-            tvEmpty.setVisibility(View.VISIBLE);
-            tvEmpty.setText("Нет записей");
-            rvAppointments.setVisibility(View.GONE);
-            return;
+    private static class CalendarPagerAdapter extends FragmentStateAdapter {
+        public CalendarPagerAdapter(@NonNull Fragment fragment) {
+            super(fragment);
         }
 
-        List<Appointment> appointments = appointmentsByDay.get(date);
-        if (appointments == null || appointments.isEmpty()) {
-            appointmentAdapter.setAppointments(new ArrayList<>());
-            tvEmpty.setVisibility(View.VISIBLE);
-            tvEmpty.setText("Нет записей на этот день");
-            rvAppointments.setVisibility(View.GONE);
-        } else {
-            tvEmpty.setVisibility(View.GONE);
-            rvAppointments.setVisibility(View.VISIBLE);
-            appointmentAdapter.setAppointments(appointments);
+        @NonNull
+        @Override
+        public Fragment createFragment(int position) {
+            if (position == 0) {
+                return new TimelineFragment();
+            } else {
+                return new MonthCalendarFragment();
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return 2;
         }
     }
 }

@@ -25,4 +25,25 @@
             app:destination="@id/loginFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/nav_month_calendar"
+        android:name="com.example.frolovnails.admin.MonthCalendarFragment"
+        android:label="Календарь"
+        tools:layout="@layout/fragment_month_calendar">
+        <action
+            android:id="@+id/action_nav_month_calendar_to_timeline"
+            app:destination="@id/nav_timeline" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_timeline"
+        android:name="com.example.frolovnails.admin.TimelineFragment"
+        android:label="Детали дня" />
+
+    <fragment
+        android:id="@+id/nav_calendar"
+        android:name="com.example.frolovnails.admin.CalendarFragment"
+        android:label="Календарь"
+        tools:layout="@layout/fragment_calendar" />
+
 </navigation>

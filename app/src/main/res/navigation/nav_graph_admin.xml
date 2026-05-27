@@ -7,8 +7,18 @@
 
     <fragment
         android:id="@+id/nav_calendar"
-        android:name="com.example.frolovnails.admin.TimelineFragment"
+        android:name="com.example.frolovnails.admin.CalendarFragment"
         android:label="Календарь"
+        tools:layout="@layout/fragment_calendar">
+        <action
+            android:id="@+id/action_calendar_to_timeline"
+            app:destination="@id/nav_timeline" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_timeline"
+        android:name="com.example.frolovnails.admin.TimelineFragment"
+        android:label="Детали дня"
         tools:layout="@layout/timeline_fragment" />
 
     <fragment
