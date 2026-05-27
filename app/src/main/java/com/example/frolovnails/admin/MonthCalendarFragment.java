@@ -20,6 +20,8 @@ import com.example.frolovnails.R;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.network.models.response.ScheduleBlock;
+import com.example.frolovnails.network.models.response.ScheduleBlocksResponse;
 import com.example.frolovnails.network.models.response.TimelineResponse;
 
 import java.io.IOException;
@@ -40,12 +42,14 @@ public class MonthCalendarFragment extends Fragment {
 
     private RecyclerView rvCalendar;
     private CalendarViewModel viewModel;
+    private ScheduleViewModel scheduleViewModel;
     private Calendar currentCalendar = Calendar.getInstance();
     private SimpleDateFormat monthFormat = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
     private TextView tvMonthTitle;
     private Button btnPrevMonth, btnNextMonth;
 
     private Map<String, List<Appointment>> appointmentsByDay = new HashMap<>();
+    private Map<String, List<ScheduleBlock>> blocksByDay = new HashMap<>();
     private List<DayItem> dayItems = new ArrayList<>();
     private OnDaySelectedListener daySelectedListener;
 
@@ -79,12 +83,14 @@ public class MonthCalendarFragment extends Fragment {
             currentCalendar.add(Calendar.MONTH, -1);
             updateTitle();
             loadData();
+            loadBlocksForMonth();
         });
 
         btnNextMonth.setOnClickListener(v -> {
             currentCalendar.add(Calendar.MONTH, 1);
             updateTitle();
             loadData();
+            loadBlocksForMonth();
         });
 
         updateTitle();
@@ -105,7 +111,24 @@ public class MonthCalendarFragment extends Fragment {
             }
         }).get(CalendarViewModel.class);
 
+        scheduleViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                if (modelClass.isAssignableFrom(ScheduleViewModel.class)) {
+                    try {
+                        TokenManager tm = new TokenManager(requireContext());
+                        return (T) new ScheduleViewModel(tm);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                return null;
+            }
+        }).get(ScheduleViewModel.class);
+
         loadData();
+        loadBlocksForMonth();
     }
 
     private void updateTitle() {
@@ -115,16 +138,57 @@ public class MonthCalendarFragment extends Fragment {
     private void loadData() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
         String startDate = dateFormat.format(currentCalendar.getTime());
-        viewModel.loadTimeline(35);
+        viewModel.loadTimeline(startDate, 35);
         viewModel.getTimelineResult().observe(getViewLifecycleOwner(), this::handleTimelineResult);
+    }
+
+    private void loadBlocksForMonth() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+        String startDate = dateFormat.format(currentCalendar.getTime());
+        Calendar endCal = (Calendar) currentCalendar.clone();
+        endCal.add(Calendar.MONTH, 1);
+        String endDate = dateFormat.format(endCal.getTime());
+
+        scheduleViewModel.getScheduleBlocks(startDate, endDate);
+        scheduleViewModel.getScheduleBlocksResponseResult().observe(getViewLifecycleOwner(), this::handleBlocksResult);
     }
 
     private void handleTimelineResult(Resource<TimelineResponse> resource) {
         if (resource instanceof Resource.Success) {
             TimelineResponse response = ((Resource.Success<TimelineResponse>) resource).getData();
             if (response != null && response.getAppointmentsByDay() != null) {
-                appointmentsByDay = response.getAppointmentsByDay();
+                // Конвертируем ключи из "2026-05-29" в "29.05.2026"
+                Map<String, List<Appointment>> converted = new HashMap<>();
+                for (Map.Entry<String, List<Appointment>> entry : response.getAppointmentsByDay().entrySet()) {
+                    String[] parts = entry.getKey().split("-");
+                    String newKey = parts[2] + "." + parts[1] + "." + parts[0];
+                    converted.put(newKey, entry.getValue());
+                }
+                appointmentsByDay = converted;
                 buildCalendarDays();
+            }
+        }
+    }
+
+    private void handleBlocksResult(Resource<ScheduleBlocksResponse> resource) {
+        if (resource instanceof Resource.Success) {
+            ScheduleBlocksResponse data = ((Resource.Success<ScheduleBlocksResponse>) resource).getData();
+            android.util.Log.d("MONTH_BLOCKS", "Data: " + (data != null ? "not null" : "null"));
+            if (data != null && data.getBlocks() != null) {
+                android.util.Log.d("MONTH_BLOCKS", "Blocks count: " + data.getBlocks().size());
+                blocksByDay.clear();
+                for (ScheduleBlock block : data.getBlocks()) {
+                    String dateKey = block.getStartTime().split(" ")[0];
+                    android.util.Log.d("MONTH_BLOCKS", "Block dateKey: " + dateKey);
+                    if (!blocksByDay.containsKey(dateKey)) {
+                        blocksByDay.put(dateKey, new ArrayList<>());
+                    }
+                    blocksByDay.get(dateKey).add(block);
+                }
+                android.util.Log.d("MONTH_BLOCKS", "blocksByDay keys: " + blocksByDay.keySet());
+                buildCalendarDays();
+            } else {
+                android.util.Log.d("MONTH_BLOCKS", "No blocks in data");
             }
         }
     }
@@ -137,44 +201,47 @@ public class MonthCalendarFragment extends Fragment {
         int firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
 
         for (int i = 0; i < firstDayOfWeek; i++) {
-            dayItems.add(new DayItem(null, null));
+            dayItems.add(new DayItem(null, null, null));
         }
 
+        SimpleDateFormat keyFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
         int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
         for (int d = 1; d <= daysInMonth; d++) {
             cal.set(Calendar.DAY_OF_MONTH, d);
-            String dateKey = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+            String dateKey = keyFormat.format(cal.getTime());
             List<Appointment> dayAppointments = appointmentsByDay.get(dateKey);
             if (dayAppointments == null) dayAppointments = new ArrayList<>();
-            dayItems.add(new DayItem(String.valueOf(d), dayAppointments));
+            List<ScheduleBlock> dayBlocks = blocksByDay.get(dateKey);
+            if (dayBlocks == null) dayBlocks = new ArrayList<>();
+            dayItems.add(new DayItem(String.valueOf(d), dayAppointments, dayBlocks));
         }
 
         while (dayItems.size() < 42) {
-            dayItems.add(new DayItem(null, null));
+            dayItems.add(new DayItem(null, null, null));
         }
 
         rvCalendar.setAdapter(new CalendarAdapter(dayItems, this::onDayClick));
     }
 
-    private void onDayClick(String dayNum, List<Appointment> appointments) {
+    private void onDayClick(String dayNum, List<Appointment> appointments, List<ScheduleBlock> blocks) {
         if (dayNum == null) return;
 
         Calendar selected = (Calendar) currentCalendar.clone();
         selected.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dayNum));
 
-        // Получаем родительский CalendarFragment
-        Fragment parent = getParentFragment();
-        if (parent instanceof CalendarFragment) {
-            ((CalendarFragment) parent).switchToTimeline(selected.getTimeInMillis());
+        if (daySelectedListener != null) {
+            daySelectedListener.onDaySelected(selected.getTimeInMillis());
         }
     }
 
     static class DayItem {
         String dayNum;
         List<Appointment> appointments;
-        DayItem(String dayNum, List<Appointment> appointments) {
+        List<ScheduleBlock> blocks;
+        DayItem(String dayNum, List<Appointment> appointments, List<ScheduleBlock> blocks) {
             this.dayNum = dayNum;
             this.appointments = appointments != null ? appointments : new ArrayList<>();
+            this.blocks = blocks != null ? blocks : new ArrayList<>();
         }
     }
 
@@ -183,7 +250,7 @@ public class MonthCalendarFragment extends Fragment {
         OnDayClickListener listener;
 
         interface OnDayClickListener {
-            void onDayClick(String dayNum, List<Appointment> appointments);
+            void onDayClick(String dayNum, List<Appointment> appointments, List<ScheduleBlock> blocks);
         }
 
         CalendarAdapter(List<DayItem> items, OnDayClickListener listener) {
@@ -205,22 +272,47 @@ public class MonthCalendarFragment extends Fragment {
             if (item.dayNum == null) {
                 holder.tvDay.setText("");
                 holder.llAppointments.setVisibility(View.GONE);
+                holder.itemView.setClickable(false);
             } else {
                 holder.tvDay.setText(item.dayNum);
                 holder.llAppointments.removeAllViews();
+                holder.llAppointments.setVisibility(View.VISIBLE);
 
                 int count = 0;
+                int total = item.blocks.size() + item.appointments.size();
+
+                // Блокировки
+                for (ScheduleBlock block : item.blocks) {
+                    if (count >= 3) {
+                        TextView moreView = new TextView(holder.itemView.getContext());
+                        moreView.setText("+ " + (total - 3) + " ещё");
+                        moreView.setTextSize(10);
+                        moreView.setTextColor(0xFF888888);
+                        holder.llAppointments.addView(moreView);
+                        break;
+                    }
+                    TextView blockView = new TextView(holder.itemView.getContext());
+                    String startTime = block.getStartTime().split(" ")[1];
+                    String endTime = block.getEndTime().split(" ")[1];
+                    blockView.setText("🚫 " + startTime + "-" + endTime + " " + (block.getReason() != null ? block.getReason() : "Заблокировано"));
+                    blockView.setTextSize(11);
+                    blockView.setTextColor(0xFFF44336);
+                    holder.llAppointments.addView(blockView);
+                    count++;
+                }
+
+                // Записи
                 for (Appointment apt : item.appointments) {
                     if (count >= 3) {
                         TextView moreView = new TextView(holder.itemView.getContext());
-                        moreView.setText("+ " + (item.appointments.size() - 3) + " ещё");
+                        moreView.setText("+ " + (total - 3) + " ещё");
                         moreView.setTextSize(10);
                         moreView.setTextColor(0xFF888888);
                         holder.llAppointments.addView(moreView);
                         break;
                     }
                     TextView aptView = new TextView(holder.itemView.getContext());
-                    String time = apt.getStartTime().split(" ")[1].substring(0, 5);
+                    String time = apt.getStartTime().split(" ")[1];
                     aptView.setText(time + " " + apt.getClient().getFirstName());
                     aptView.setTextSize(11);
                     aptView.setTextColor(getColorForStatus(apt.getStatus()));
@@ -230,7 +322,7 @@ public class MonthCalendarFragment extends Fragment {
 
                 holder.itemView.setOnClickListener(v -> {
                     if (listener != null) {
-                        listener.onDayClick(item.dayNum, item.appointments);
+                        listener.onDayClick(item.dayNum, item.appointments, item.blocks);
                     }
                 });
             }

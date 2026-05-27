@@ -30,6 +30,7 @@ public class ScheduleViewModel extends ViewModel {
     private final ApiService apiService;
     private final MutableLiveData<Resource<List<AvailableDay>>> availableDaysResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<List<ScheduleBlock>>> scheduleBlocksResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<ScheduleBlocksResponse>> scheduleBlocksResponseResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<AvailableDay>> addAvailableDayResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<AvailableDay>> updateAvailableDayResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Void>> deleteAvailableDayResult = new MutableLiveData<>();
@@ -42,9 +43,14 @@ public class ScheduleViewModel extends ViewModel {
         this.apiService = ApiClient.getClient(tokenManager).create(ApiService.class);
     }
 
+    public ScheduleViewModel() {
+        this.apiService = ApiClient.getClient(null).create(ApiService.class);
+    }
+
     // Getters
     public LiveData<Resource<List<AvailableDay>>> getAvailableDaysResult() { return availableDaysResult; }
     public LiveData<Resource<List<ScheduleBlock>>> getScheduleBlocksResult() { return scheduleBlocksResult; }
+    public LiveData<Resource<ScheduleBlocksResponse>> getScheduleBlocksResponseResult() { return scheduleBlocksResponseResult; }
     public LiveData<Resource<AvailableDay>> getAddAvailableDayResult() { return addAvailableDayResult; }
     public LiveData<Resource<AvailableDay>> getUpdateAvailableDayResult() { return updateAvailableDayResult; }
     public LiveData<Resource<Void>> getDeleteAvailableDayResult() { return deleteAvailableDayResult; }
@@ -79,6 +85,61 @@ public class ScheduleViewModel extends ViewModel {
             @Override
             public void onFailure(Call<ApiResponse<AvailableDaysResponse>> call, Throwable t) {
                 availableDaysResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
+            }
+        });
+    }
+
+    // Загрузить блокировки
+    public void loadScheduleBlocks(int monthsCount) {
+        scheduleBlocksResult.setValue(Resource.Loading.getInstance());
+
+        Calendar cal = Calendar.getInstance();
+        String startDate = dateFormat.format(cal.getTime());
+        cal.add(Calendar.MONTH, monthsCount);
+        String endDate = dateFormat.format(cal.getTime());
+
+        apiService.getScheduleBlocks(startDate, endDate).enqueue(new Callback<ApiResponse<ScheduleBlocksResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<ScheduleBlocksResponse>> call, Response<ApiResponse<ScheduleBlocksResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    ScheduleBlocksResponse data = response.body().getData();
+                    if (data != null && data.getBlocks() != null) {
+                        scheduleBlocksResult.setValue(new Resource.Success<>(data.getBlocks()));
+                    } else {
+                        scheduleBlocksResult.setValue(new Resource.Error<>("Нет данных"));
+                    }
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки";
+                    scheduleBlocksResult.setValue(new Resource.Error<>(msg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<ScheduleBlocksResponse>> call, Throwable t) {
+                scheduleBlocksResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
+            }
+        });
+    }
+
+    // Получить блокировки для диапазона дат (возвращает ScheduleBlocksResponse)
+    public void getScheduleBlocks(String startDate, String endDate) {
+        scheduleBlocksResponseResult.setValue(Resource.Loading.getInstance());
+
+        apiService.getScheduleBlocks(startDate, endDate).enqueue(new Callback<ApiResponse<ScheduleBlocksResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<ScheduleBlocksResponse>> call, Response<ApiResponse<ScheduleBlocksResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    ScheduleBlocksResponse data = response.body().getData();
+                    scheduleBlocksResponseResult.setValue(data != null ? new Resource.Success<>(data) : new Resource.Error<>("Нет данных"));
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки";
+                    scheduleBlocksResponseResult.setValue(new Resource.Error<>(msg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<ScheduleBlocksResponse>> call, Throwable t) {
+                scheduleBlocksResponseResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
             }
         });
     }
@@ -144,38 +205,6 @@ public class ScheduleViewModel extends ViewModel {
             @Override
             public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
                 deleteAvailableDayResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
-            }
-        });
-    }
-
-    // Загрузить блокировки
-    public void loadScheduleBlocks(int monthsCount) {
-        scheduleBlocksResult.setValue(Resource.Loading.getInstance());
-
-        Calendar cal = Calendar.getInstance();
-        String startDate = dateFormat.format(cal.getTime());
-        cal.add(Calendar.MONTH, monthsCount);
-        String endDate = dateFormat.format(cal.getTime());
-
-        apiService.getScheduleBlocks(startDate, endDate).enqueue(new Callback<ApiResponse<ScheduleBlocksResponse>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<ScheduleBlocksResponse>> call, Response<ApiResponse<ScheduleBlocksResponse>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    ScheduleBlocksResponse data = response.body().getData();
-                    if (data != null && data.getBlocks() != null) {
-                        scheduleBlocksResult.setValue(new Resource.Success<>(data.getBlocks()));
-                    } else {
-                        scheduleBlocksResult.setValue(new Resource.Error<>("Нет данных"));
-                    }
-                } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки";
-                    scheduleBlocksResult.setValue(new Resource.Error<>(msg));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<ScheduleBlocksResponse>> call, Throwable t) {
-                scheduleBlocksResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
             }
         });
     }

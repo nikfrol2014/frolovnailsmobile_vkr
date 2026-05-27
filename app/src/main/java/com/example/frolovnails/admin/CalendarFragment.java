@@ -46,24 +46,17 @@ public class CalendarFragment extends Fragment implements MonthCalendarFragment.
         }).attach();
     }
 
-    @Override
-    public void onDaySelected(long dateMillis) {
-        Bundle bundle = new Bundle();
-        bundle.putLong("selected_date_millis", dateMillis);
-
-        NavHostFragment.findNavController(this)
-                .navigate(R.id.action_calendar_to_timeline, bundle);
-    }
-
     public void switchToTimeline(long dateMillis) {
-        // Переключаемся на вкладку "Таймлайн"
         viewPager.setCurrentItem(0, true);
-
-        // Получаем TimelineFragment из ViewPager2
         Fragment fragment = getChildFragmentManager().findFragmentByTag("f0");
         if (fragment instanceof TimelineFragment) {
             ((TimelineFragment) fragment).setDate(dateMillis);
         }
+    }
+
+    @Override
+    public void onDaySelected(long dateMillis) {
+        switchToTimeline(dateMillis);
     }
 
     private static class CalendarPagerAdapter extends FragmentStateAdapter {

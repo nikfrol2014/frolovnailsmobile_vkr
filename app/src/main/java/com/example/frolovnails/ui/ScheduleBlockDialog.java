@@ -1,7 +1,10 @@
 package com.example.frolovnails.ui;
 
+import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +26,8 @@ import com.example.frolovnails.network.models.response.ScheduleBlock;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class ScheduleBlockDialog extends DialogFragment {
 
@@ -62,6 +67,12 @@ public class ScheduleBlockDialog extends DialogFragment {
         btnCancel = view.findViewById(R.id.btnCancel);
         progressBar = view.findViewById(R.id.progressBar);
 
+        etStartTime.setInputType(InputType.TYPE_NULL);
+        etEndTime.setInputType(InputType.TYPE_NULL);
+
+        etStartTime.setOnClickListener(v -> showDateTimePicker(true));
+        etEndTime.setOnClickListener(v -> showDateTimePicker(false));
+
         TokenManager tokenManager = null;
         try {
             tokenManager = new TokenManager(requireContext());
@@ -80,6 +91,26 @@ public class ScheduleBlockDialog extends DialogFragment {
 
         btnSave.setOnClickListener(v -> saveBlock());
         btnCancel.setOnClickListener(v -> dismiss());
+    }
+
+    private void showDateTimePicker(boolean isStartTime) {
+        Calendar calendar = Calendar.getInstance();
+
+        DatePickerDialog datePicker = new DatePickerDialog(requireContext(),
+                (dateView, year, month, dayOfMonth) -> {
+                    TimePickerDialog timePicker = new TimePickerDialog(requireContext(),
+                            (timeView, hourOfDay, minute) -> {
+                                String formattedDateTime = String.format(Locale.getDefault(),
+                                        "%02d.%02d.%04d %02d:%02d", dayOfMonth, month + 1, year, hourOfDay, minute);
+                                if (isStartTime) {
+                                    etStartTime.setText(formattedDateTime);
+                                } else {
+                                    etEndTime.setText(formattedDateTime);
+                                }
+                            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+                    timePicker.show();
+                }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        datePicker.show();
     }
 
     private void saveBlock() {
@@ -104,10 +135,16 @@ public class ScheduleBlockDialog extends DialogFragment {
     }
 
     private void handleResult(Resource<ScheduleBlock> resource) {
-        if (resource instanceof Resource.Success) {
+        if (resource instanceof Resource.Loading) {
+            progressBar.setVisibility(View.VISIBLE);
+            btnSave.setEnabled(false);
+        } else if (resource instanceof Resource.Success) {
+            progressBar.setVisibility(View.GONE);
             Toast.makeText(getContext(), "Блокировка добавлена", Toast.LENGTH_SHORT).show();
             dismiss();
         } else if (resource instanceof Resource.Error) {
+            progressBar.setVisibility(View.GONE);
+            btnSave.setEnabled(true);
             Toast.makeText(getContext(), ((Resource.Error<ScheduleBlock>) resource).getMessage(), Toast.LENGTH_SHORT).show();
         }
     }

@@ -11,12 +11,15 @@ import com.example.frolovnails.network.ApiService;
 import com.example.frolovnails.network.models.request.UpdateAppointmentStatusRequest;
 import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.network.models.response.ScheduleBlock;
+import com.example.frolovnails.network.models.response.ScheduleBlocksResponse;
 import com.example.frolovnails.network.models.response.TimelineResponse;
 
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -31,6 +34,7 @@ public class CalendarViewModel extends ViewModel {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
     private final MutableLiveData<Resource<Appointment>> updateStatusResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<Appointment>> updateNotesResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<List<ScheduleBlock>>> blocksResult = new MutableLiveData<>();
 
     public CalendarViewModel(TokenManager tokenManager) {
         this.apiService = ApiClient.getClient(tokenManager).create(ApiService.class);
@@ -46,6 +50,34 @@ public class CalendarViewModel extends ViewModel {
 
     public LiveData<Resource<TimelineResponse>> getTimelineResult() {
         return timelineResult;
+    }
+    public LiveData<Resource<List<ScheduleBlock>>> getBlocksResult() {
+        return blocksResult;
+    }
+
+    public void loadTimeline(String startDate, int daysCount) {
+        timelineResult.setValue(Resource.Loading.getInstance());
+        apiService.getTimeline(startDate, daysCount).enqueue(new Callback<ApiResponse<TimelineResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<TimelineResponse>> call, Response<ApiResponse<TimelineResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    TimelineResponse data = response.body().getData();
+                    if (data != null) {
+                        timelineResult.setValue(new Resource.Success<>(data));
+                    } else {
+                        timelineResult.setValue(new Resource.Error<>("Нет данных"));
+                    }
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки";
+                    timelineResult.setValue(new Resource.Error<>(msg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<TimelineResponse>> call, Throwable t) {
+                timelineResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
+            }
+        });
     }
 
     public void loadTimeline(int daysCount) {
@@ -120,6 +152,32 @@ public class CalendarViewModel extends ViewModel {
             @Override
             public void onFailure(Call<ApiResponse<Appointment>> call, Throwable t) {
                 updateNotesResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
+            }
+        });
+    }
+
+    public void loadBlocksForDate(String date) {
+        blocksResult.setValue(Resource.Loading.getInstance());
+
+        apiService.getScheduleBlocks(date, date).enqueue(new Callback<ApiResponse<ScheduleBlocksResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<ScheduleBlocksResponse>> call, Response<ApiResponse<ScheduleBlocksResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    ScheduleBlocksResponse data = response.body().getData();
+                    if (data != null && data.getBlocks() != null) {
+                        blocksResult.setValue(new Resource.Success<>(data.getBlocks()));
+                    } else {
+                        blocksResult.setValue(new Resource.Error<>("Нет блокировок"));
+                    }
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки блокировок";
+                    blocksResult.setValue(new Resource.Error<>(msg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<ScheduleBlocksResponse>> call, Throwable t) {
+                blocksResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
             }
         });
     }

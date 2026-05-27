@@ -13,6 +13,7 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.network.models.response.ScheduleBlock;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,6 +30,7 @@ public class SimpleTimelineView extends View {
     private static final int LEFT_MARGIN_DP = 50;
 
     private List<Appointment> appointments = new ArrayList<>();
+    private List<ScheduleBlock> blocks = new ArrayList<>();
     private float hourHeight;
     private float leftMargin;
     private int viewWidth;
@@ -38,11 +40,12 @@ public class SimpleTimelineView extends View {
     private Paint textPaint;
     private Paint eventPaint;
     private Paint currentTimePaint;
+    private Paint blockPaint;
+    private Paint blockTextPaint;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
 
     private Handler handler;
     private Runnable timeUpdater;
-
     private OnNotesClickListener notesClickListener;
 
     public interface OnNotesClickListener {
@@ -84,6 +87,14 @@ public class SimpleTimelineView extends View {
         currentTimePaint.setColor(Color.RED);
         currentTimePaint.setStrokeWidth(2f);
 
+        blockPaint = new Paint();
+        blockPaint.setColor(Color.parseColor("#AAFF4444"));
+        blockPaint.setStyle(Paint.Style.FILL);
+
+        blockTextPaint = new Paint();
+        blockTextPaint.setColor(Color.WHITE);
+        blockTextPaint.setTextSize(12 * density);
+
         startCurrentTimeUpdater();
     }
 
@@ -116,6 +127,11 @@ public class SimpleTimelineView extends View {
         invalidate();
     }
 
+    public void setBlocks(List<ScheduleBlock> blocks) {
+        this.blocks = blocks != null ? blocks : new ArrayList<>();
+        invalidate();
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -135,6 +151,12 @@ public class SimpleTimelineView extends View {
             y += hourHeight;
         }
 
+        // Рисуем блокировки
+        for (ScheduleBlock block : blocks) {
+            drawBlock(canvas, block);
+        }
+
+        // Рисуем записи
         for (Appointment apt : appointments) {
             drawAppointment(canvas, apt);
         }
@@ -145,6 +167,35 @@ public class SimpleTimelineView extends View {
             timeTextPaint.setColor(Color.RED);
             timeTextPaint.setTextSize(12 * getResources().getDisplayMetrics().density);
             canvas.drawText("● Сейчас", leftMargin + 8, currentTimeY - 8, timeTextPaint);
+        }
+    }
+
+    private void drawBlock(Canvas canvas, ScheduleBlock block) {
+        try {
+            Calendar startCal = Calendar.getInstance();
+            startCal.setTime(dateFormat.parse(block.getStartTime()));
+            Calendar endCal = Calendar.getInstance();
+            endCal.setTime(dateFormat.parse(block.getEndTime()));
+
+            int startHour = startCal.get(Calendar.HOUR_OF_DAY);
+            int startMinute = startCal.get(Calendar.MINUTE);
+            int endHour = endCal.get(Calendar.HOUR_OF_DAY);
+            int endMinute = endCal.get(Calendar.MINUTE);
+
+            float top = (startHour - START_HOUR) * hourHeight;
+            top += (startMinute / 60f) * hourHeight;
+
+            float bottom = (endHour - START_HOUR) * hourHeight;
+            bottom += (endMinute / 60f) * hourHeight;
+
+            RectF rect = new RectF(leftMargin + 4, top + 2, viewWidth - 8, bottom - 2);
+            canvas.drawRoundRect(rect, 8, 8, blockPaint);
+
+            String blockText = "🚫 " + (block.getReason() != null ? block.getReason() : "Заблокировано");
+            canvas.drawText(blockText, rect.left + 8, rect.top + 24, blockTextPaint);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
     }
 
@@ -187,41 +238,26 @@ public class SimpleTimelineView extends View {
             float x = rect.left + 8;
             float y = rect.top + lineHeight;
 
-            // Строка 1: Имя клиента + статус
             textPaint.setTextSize(14 * density);
             textPaint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD));
             String statusText = getStatusText(apt.getStatus());
             String name = apt.getClient().getFirstName() + " " + apt.getClient().getLastName() + " [" + statusText + "]";
             canvas.drawText(name, x, y, textPaint);
 
-            // Строка 2: Время
             textPaint.setTextSize(12 * density);
             textPaint.setTypeface(android.graphics.Typeface.DEFAULT);
             String time = String.format(Locale.getDefault(), "%02d:%02d - %02d:%02d", startHour, startMinute, endHour, endMinute);
             y += lineHeight;
             canvas.drawText(time, x, y, textPaint);
 
-            // Строка 3: Услуга + категория
             y += lineHeight;
             String serviceText = apt.getService().getName() + " (" + apt.getService().getCategory() + ")";
             canvas.drawText(serviceText, x, y, textPaint);
 
-            // Строка 4: Цена + длительность
             y += lineHeight;
             textPaint.setColor(Color.parseColor("#FFD700"));
             String priceText = apt.getService().getPrice() + " ₽ • " + apt.getService().getDurationMinutes() + " мин";
             canvas.drawText(priceText, x, y, textPaint);
-
-            // Строка 5: Заметки (если есть)
-            if (apt.getMasterNotes() != null && !apt.getMasterNotes().isEmpty()) {
-                y += lineHeight;
-                textPaint.setColor(Color.parseColor("#CCCCCC"));
-                textPaint.setTextSize(11 * density);
-                String notesPreview = apt.getMasterNotes().length() > 35
-                        ? apt.getMasterNotes().substring(0, 35) + "..."
-                        : apt.getMasterNotes();
-                canvas.drawText("📝 " + notesPreview, x, y, textPaint);
-            }
 
             // Кнопка "📝" справа, по центру по вертикали
             float buttonSize = 32 * density;
@@ -249,6 +285,17 @@ public class SimpleTimelineView extends View {
             buttonTextPaint.setTextSize(18 * density);
             buttonTextPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText("📝", buttonX + buttonSize / 2, buttonY + buttonSize - 10, buttonTextPaint);
+
+            // Заметки мастера (если есть)
+            if (apt.getMasterNotes() != null && !apt.getMasterNotes().isEmpty()) {
+                y += lineHeight;
+                textPaint.setColor(Color.parseColor("#CCCCCC"));
+                textPaint.setTextSize(11 * density);
+                String notesPreview = apt.getMasterNotes().length() > 30
+                        ? apt.getMasterNotes().substring(0, 30) + "..."
+                        : apt.getMasterNotes();
+                canvas.drawText("📝 " + notesPreview, x, y, textPaint);
+            }
 
         } catch (ParseException e) {
             e.printStackTrace();

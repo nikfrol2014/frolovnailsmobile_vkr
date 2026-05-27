@@ -19,6 +19,7 @@ import com.example.frolovnails.calendar.views.SimpleTimelineView;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.network.models.response.ScheduleBlock;
 import com.example.frolovnails.network.models.response.TimelineResponse;
 import com.example.frolovnails.ui.MasterNotesDialog;
 
@@ -84,7 +85,6 @@ public class TimelineFragment extends Fragment {
         setupNavigation();
         isInitialized = true;
 
-        // Если есть аргументы из навигации (первый запуск)
         if (getArguments() != null) {
             long dateMillis = getArguments().getLong("selected_date_millis", -1);
             if (dateMillis != -1) {
@@ -135,14 +135,31 @@ public class TimelineFragment extends Fragment {
 
     private void loadData() {
         String startDate = dateFormat.format(currentCalendar.getTime());
-        viewModel.loadTimeline(7);
+        viewModel.loadTimeline(startDate, 1);
+        loadBlocksForDate();
+
         viewModel.getTimelineResult().observe(getViewLifecycleOwner(), this::handleTimelineResult);
     }
 
     private void loadDataForDate() {
         String startDate = dateFormat.format(currentCalendar.getTime());
-        viewModel.loadTimeline(1);
+        viewModel.loadTimeline(startDate, 1);
+        loadBlocksForDate();
+
         viewModel.getTimelineResult().observe(getViewLifecycleOwner(), this::handleTimelineResult);
+    }
+
+    private void loadBlocksForDate() {
+        String startDate = dateFormat.format(currentCalendar.getTime());
+        viewModel.loadBlocksForDate(startDate);
+        viewModel.getBlocksResult().observe(getViewLifecycleOwner(), this::handleBlocksResult);
+    }
+
+    private void handleBlocksResult(Resource<List<ScheduleBlock>> resource) {
+        if (resource instanceof Resource.Success) {
+            List<ScheduleBlock> blocks = ((Resource.Success<List<ScheduleBlock>>) resource).getData();
+            timelineView.setBlocks(blocks != null ? blocks : new ArrayList<>());
+        }
     }
 
     private void handleTimelineResult(Resource<TimelineResponse> resource) {

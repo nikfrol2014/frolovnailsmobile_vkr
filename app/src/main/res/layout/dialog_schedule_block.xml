@@ -17,28 +17,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:endIconMode="clear_text">
+        app:endIconMode="clear_text"
+        app:endIconDrawable="@android:drawable/ic_menu_today">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etStartTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Время начала (дд.ММ.гггг ЧЧ:ММ)"
-            android:inputType="datetime" />
+            android:hint="Начало (дд.ММ.гггг ЧЧ:ММ)"
+            android:focusable="false"
+            android:cursorVisible="false" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:endIconMode="clear_text">
+        app:endIconMode="clear_text"
+        app:endIconDrawable="@android:drawable/ic_menu_today">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etEndTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Время окончания (дд.ММ.гггг ЧЧ:ММ)"
-            android:inputType="datetime" />
+            android:hint="Окончание (дд.ММ.гггг ЧЧ:ММ)"
+            android:focusable="false"
+            android:cursorVisible="false" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
