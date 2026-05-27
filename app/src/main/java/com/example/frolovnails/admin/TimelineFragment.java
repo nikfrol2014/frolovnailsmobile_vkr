@@ -20,6 +20,7 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.TimelineResponse;
+import com.example.frolovnails.ui.MasterNotesDialog;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -76,6 +77,12 @@ public class TimelineFragment extends Fragment {
             currentCalendar = Calendar.getInstance();
             updateDateDisplay();
             loadData();
+        });
+
+        timelineView.setOnNotesClickListener(appointment -> {
+            MasterNotesDialog dialog = MasterNotesDialog.newInstance(appointment);
+            dialog.show(getChildFragmentManager(), "master_notes");
+            // Убираем setOnDismissListener, обновление будет в onResume
         });
 
         TokenManager tokenManager = null;
