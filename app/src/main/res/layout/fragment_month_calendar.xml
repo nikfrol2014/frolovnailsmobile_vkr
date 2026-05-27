@@ -13,7 +13,7 @@
 
         <Button
             android:id="@+id/btnPrevMonth"
-            android:layout_width="48dp"
+            android:layout_width="55dp"
             android:layout_height="48dp"
             android:text="◀" />
 
@@ -28,7 +28,7 @@
 
         <Button
             android:id="@+id/btnNextMonth"
-            android:layout_width="48dp"
+            android:layout_width="55dp"
             android:layout_height="48dp"
             android:text="▶" />
 

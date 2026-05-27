@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">FrolovNails</string>
+    <string name="to_left_arrow"><![CDATA[<]]></string>
+    <string name="to_right_arrow"><![CDATA[>]]></string>
 </resources>
