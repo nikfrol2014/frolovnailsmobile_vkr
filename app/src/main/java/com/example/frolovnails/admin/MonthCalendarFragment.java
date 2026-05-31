@@ -45,6 +45,7 @@ public class MonthCalendarFragment extends Fragment {
     private ScheduleViewModel scheduleViewModel;
     private Calendar currentCalendar = Calendar.getInstance();
     private SimpleDateFormat monthFormat = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
     private TextView tvMonthTitle;
     private Button btnPrevMonth, btnNextMonth;
 
@@ -136,17 +137,26 @@ public class MonthCalendarFragment extends Fragment {
     }
 
     private void loadData() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
-        String startDate = dateFormat.format(currentCalendar.getTime());
-        viewModel.loadTimeline(startDate, 35);
+        // Получаем начало текущего месяца
+        Calendar startCal = (Calendar) currentCalendar.clone();
+        startCal.set(Calendar.DAY_OF_MONTH, 1);
+        String startDate = dateFormat.format(startCal.getTime());
+
+        // Загружаем 45 дней (весь месяц + запас для захвата всех дней)
+        viewModel.loadTimeline(startDate, 45);
         viewModel.getTimelineResult().observe(getViewLifecycleOwner(), this::handleTimelineResult);
     }
 
     private void loadBlocksForMonth() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
-        String startDate = dateFormat.format(currentCalendar.getTime());
+        // Получаем начало текущего месяца
+        Calendar startCal = (Calendar) currentCalendar.clone();
+        startCal.set(Calendar.DAY_OF_MONTH, 1);
+        String startDate = dateFormat.format(startCal.getTime());
+
+        // Получаем конец текущего месяца
         Calendar endCal = (Calendar) currentCalendar.clone();
         endCal.add(Calendar.MONTH, 1);
+        endCal.add(Calendar.DAY_OF_MONTH, -1);
         String endDate = dateFormat.format(endCal.getTime());
 
         scheduleViewModel.getScheduleBlocks(startDate, endDate);
@@ -154,10 +164,14 @@ public class MonthCalendarFragment extends Fragment {
     }
 
     private void handleTimelineResult(Resource<TimelineResponse> resource) {
+        android.util.Log.d("MONTH_DEBUG", "handleTimelineResult called, resource: " + resource);
         if (resource instanceof Resource.Success) {
             TimelineResponse response = ((Resource.Success<TimelineResponse>) resource).getData();
+            android.util.Log.d("MONTH_DEBUG", "appointmentsByDay size: " +
+                    (response != null && response.getAppointmentsByDay() != null ?
+                            response.getAppointmentsByDay().size() : 0));
             if (response != null && response.getAppointmentsByDay() != null) {
-                // Конвертируем ключи из "2026-05-29" в "29.05.2026"
+                // Конвертируем ключи из "2026-05-31" в "31.05.2026"
                 Map<String, List<Appointment>> converted = new HashMap<>();
                 for (Map.Entry<String, List<Appointment>> entry : response.getAppointmentsByDay().entrySet()) {
                     String[] parts = entry.getKey().split("-");
@@ -171,24 +185,21 @@ public class MonthCalendarFragment extends Fragment {
     }
 
     private void handleBlocksResult(Resource<ScheduleBlocksResponse> resource) {
+        android.util.Log.d("MONTH_DEBUG", "handleBlocksResult called");
         if (resource instanceof Resource.Success) {
             ScheduleBlocksResponse data = ((Resource.Success<ScheduleBlocksResponse>) resource).getData();
-            android.util.Log.d("MONTH_BLOCKS", "Data: " + (data != null ? "not null" : "null"));
+            android.util.Log.d("MONTH_DEBUG", "blocks size: " +
+                    (data != null && data.getBlocks() != null ? data.getBlocks().size() : 0));
             if (data != null && data.getBlocks() != null) {
-                android.util.Log.d("MONTH_BLOCKS", "Blocks count: " + data.getBlocks().size());
                 blocksByDay.clear();
                 for (ScheduleBlock block : data.getBlocks()) {
                     String dateKey = block.getStartTime().split(" ")[0];
-                    android.util.Log.d("MONTH_BLOCKS", "Block dateKey: " + dateKey);
                     if (!blocksByDay.containsKey(dateKey)) {
                         blocksByDay.put(dateKey, new ArrayList<>());
                     }
                     blocksByDay.get(dateKey).add(block);
                 }
-                android.util.Log.d("MONTH_BLOCKS", "blocksByDay keys: " + blocksByDay.keySet());
                 buildCalendarDays();
-            } else {
-                android.util.Log.d("MONTH_BLOCKS", "No blocks in data");
             }
         }
     }
@@ -200,15 +211,15 @@ public class MonthCalendarFragment extends Fragment {
         cal.set(Calendar.DAY_OF_MONTH, 1);
         int firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
 
+        // Пустые ячейки для дней предыдущего месяца
         for (int i = 0; i < firstDayOfWeek; i++) {
             dayItems.add(new DayItem(null, null, null));
         }
 
-        SimpleDateFormat keyFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
         int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
         for (int d = 1; d <= daysInMonth; d++) {
             cal.set(Calendar.DAY_OF_MONTH, d);
-            String dateKey = keyFormat.format(cal.getTime());
+            String dateKey = dateFormat.format(cal.getTime());
             List<Appointment> dayAppointments = appointmentsByDay.get(dateKey);
             if (dayAppointments == null) dayAppointments = new ArrayList<>();
             List<ScheduleBlock> dayBlocks = blocksByDay.get(dateKey);
@@ -216,6 +227,7 @@ public class MonthCalendarFragment extends Fragment {
             dayItems.add(new DayItem(String.valueOf(d), dayAppointments, dayBlocks));
         }
 
+        // Заполняем до 42 ячеек (6 недель)
         while (dayItems.size() < 42) {
             dayItems.add(new DayItem(null, null, null));
         }
@@ -353,5 +365,12 @@ public class MonthCalendarFragment extends Fragment {
                 llAppointments = itemView.findViewById(R.id.llAppointments);
             }
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadData();
+        loadBlocksForMonth();
     }
 }

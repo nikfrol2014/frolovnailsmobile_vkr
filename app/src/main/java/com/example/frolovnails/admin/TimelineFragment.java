@@ -21,6 +21,7 @@ import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.ScheduleBlock;
 import com.example.frolovnails.network.models.response.TimelineResponse;
+import com.example.frolovnails.ui.CompleteAppointmentDialog;
 import com.example.frolovnails.ui.MasterNotesDialog;
 
 import java.io.IOException;
@@ -61,6 +62,28 @@ public class TimelineFragment extends Fragment {
         btnNextDay = view.findViewById(R.id.btnNextDay);
         btnToday = view.findViewById(R.id.btnToday);
 
+        // ========== ОБРАБОТЧИК КЛИКА ПО ЗАПИСИ (ЗАВЕРШЕНИЕ) ==========
+        timelineView.setOnEventClickListener(appointment -> {
+            // Проверяем, можно ли завершить запись
+            String status = appointment.getStatus().toString();
+            if ("CANCELLED".equals(status)) {
+                Toast.makeText(getContext(), "Отменённую запись нельзя завершить", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if ("COMPLETED".equals(status)) {
+                Toast.makeText(getContext(), "Запись уже завершена", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Открываем диалог завершения записи
+            CompleteAppointmentDialog dialog = CompleteAppointmentDialog.newInstance(appointment);
+            dialog.show(getChildFragmentManager(), "complete_appointment");
+
+            // Обновляем таймлайн после закрытия диалога
+//            dialog.setOnDismissListener(d -> loadDataForDate());  // ← УБРАЛИ .getDialog()
+        });
+
+        // ========== ОБРАБОТЧИК КНОПКИ ЗАМЕТОК ==========
         timelineView.setOnNotesClickListener(appointment -> {
             MasterNotesDialog dialog = MasterNotesDialog.newInstance(appointment);
             dialog.show(getChildFragmentManager(), "master_notes");
@@ -160,6 +183,12 @@ public class TimelineFragment extends Fragment {
             List<ScheduleBlock> blocks = ((Resource.Success<List<ScheduleBlock>>) resource).getData();
             timelineView.setBlocks(blocks != null ? blocks : new ArrayList<>());
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadDataForDate();
     }
 
     private void handleTimelineResult(Resource<TimelineResponse> resource) {

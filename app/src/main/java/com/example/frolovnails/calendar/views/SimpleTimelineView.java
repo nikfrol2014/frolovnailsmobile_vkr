@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.ScheduleBlock;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,13 +48,22 @@ public class SimpleTimelineView extends View {
     private Handler handler;
     private Runnable timeUpdater;
     private OnNotesClickListener notesClickListener;
+    private OnEventClickListener eventClickListener;
 
     public interface OnNotesClickListener {
         void onNotesClick(Appointment appointment);
     }
 
+    public interface OnEventClickListener {
+        void onEventClick(Appointment appointment);
+    }
+
     public void setOnNotesClickListener(OnNotesClickListener listener) {
         this.notesClickListener = listener;
+    }
+
+    public void setOnEventClickListener(OnEventClickListener listener) {
+        this.eventClickListener = listener;
     }
 
     public SimpleTimelineView(Context context) {
@@ -151,16 +161,17 @@ public class SimpleTimelineView extends View {
             y += hourHeight;
         }
 
-        // Рисуем блокировки
+        // Блокировки
         for (ScheduleBlock block : blocks) {
             drawBlock(canvas, block);
         }
 
-        // Рисуем записи
+        // Записи
         for (Appointment apt : appointments) {
             drawAppointment(canvas, apt);
         }
 
+        // Линия текущего времени
         if (currentTimeY >= 0 && currentTimeY < getHeight()) {
             canvas.drawLine(0, currentTimeY, viewWidth, currentTimeY, currentTimePaint);
             Paint timeTextPaint = new Paint();
@@ -221,10 +232,10 @@ public class SimpleTimelineView extends View {
 
             RectF rect = new RectF(leftMargin + 4, top + 2, viewWidth - 8, bottom - 2);
 
-            eventPaint.setColor(getBackgroundColorForStatus(apt.getStatus()));
+            eventPaint.setColor(getBackgroundColorForStatus(apt.getStatus().toString()));
             canvas.drawRoundRect(rect, 8, 8, eventPaint);
 
-            eventPaint.setColor(getBorderColorForStatus(apt.getStatus()));
+            eventPaint.setColor(getBorderColorForStatus(apt.getStatus().toString()));
             eventPaint.setStyle(Paint.Style.STROKE);
             eventPaint.setStrokeWidth(2f);
             canvas.drawRoundRect(rect, 8, 8, eventPaint);
@@ -240,7 +251,7 @@ public class SimpleTimelineView extends View {
 
             textPaint.setTextSize(14 * density);
             textPaint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD));
-            String statusText = getStatusText(apt.getStatus());
+            String statusText = getStatusText(apt.getStatus().toString());
             String name = apt.getClient().getFirstName() + " " + apt.getClient().getLastName() + " [" + statusText + "]";
             canvas.drawText(name, x, y, textPaint);
 
@@ -256,7 +267,13 @@ public class SimpleTimelineView extends View {
 
             y += lineHeight;
             textPaint.setColor(Color.parseColor("#FFD700"));
-            String priceText = apt.getService().getPrice() + " ₽ • " + apt.getService().getDurationMinutes() + " мин";
+            // Стало (если есть фактическая цена, показываем её):
+            BigDecimal actualPrice = apt.getActualPrice();
+            BigDecimal displayPrice = actualPrice != null ? actualPrice : apt.getService().getPrice();
+            String priceText = displayPrice + " ₽ • " + apt.getService().getDurationMinutes() + " мин";
+            if (actualPrice != null) {
+                priceText += " (было " + apt.getService().getPrice() + " ₽)";
+            }
             canvas.drawText(priceText, x, y, textPaint);
 
             // Кнопка "📝" справа, по центру по вертикали
@@ -286,7 +303,7 @@ public class SimpleTimelineView extends View {
             buttonTextPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText("📝", buttonX + buttonSize / 2, buttonY + buttonSize - 10, buttonTextPaint);
 
-            // Заметки мастера (если есть)
+            // Заметки мастера
             if (apt.getMasterNotes() != null && !apt.getMasterNotes().isEmpty()) {
                 y += lineHeight;
                 textPaint.setColor(Color.parseColor("#CCCCCC"));
@@ -304,7 +321,7 @@ public class SimpleTimelineView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP && notesClickListener != null) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
             float x = event.getX();
             float y = event.getY();
 
@@ -334,9 +351,21 @@ public class SimpleTimelineView extends View {
                     float buttonX = (viewWidth - 8) - buttonSize - 8;
                     float buttonY = rectCenterY - buttonSize / 2;
 
+                    // Проверяем клик по кнопке заметок
                     if (x >= buttonX && x <= buttonX + buttonSize &&
                             y >= buttonY && y <= buttonY + buttonSize) {
-                        notesClickListener.onNotesClick(apt);
+                        if (notesClickListener != null) {
+                            notesClickListener.onNotesClick(apt);
+                        }
+                        return true;
+                    }
+
+                    // Проверяем клик по самой записи (для завершения)
+                    if (x >= leftMargin && x <= viewWidth - 8 &&
+                            y >= top && y <= bottom) {
+                        if (eventClickListener != null) {
+                            eventClickListener.onEventClick(apt);
+                        }
                         return true;
                     }
                 } catch (ParseException e) {
@@ -347,36 +376,36 @@ public class SimpleTimelineView extends View {
         return true;
     }
 
-    private int getBackgroundColorForStatus(Appointment.AppointmentStatus status) {
+    private int getBackgroundColorForStatus(String status) {
         switch (status) {
-            case CONFIRMED: return Color.parseColor("#4CAF50");
-            case PENDING: return Color.parseColor("#FF9800");
-            case CREATED: return Color.parseColor("#FF9800");
-            case CANCELLED: return Color.parseColor("#F44336");
-            case COMPLETED: return Color.parseColor("#2196F3");
+            case "CONFIRMED": return Color.parseColor("#4CAF50");
+            case "PENDING": return Color.parseColor("#FF9800");
+            case "CREATED": return Color.parseColor("#FF9800");
+            case "CANCELLED": return Color.parseColor("#F44336");
+            case "COMPLETED": return Color.parseColor("#2196F3");
             default: return Color.parseColor("#9E9E9E");
         }
     }
 
-    private int getBorderColorForStatus(Appointment.AppointmentStatus status) {
+    private int getBorderColorForStatus(String status) {
         switch (status) {
-            case CONFIRMED: return Color.parseColor("#2E7D32");
-            case PENDING: return Color.parseColor("#E65100");
-            case CREATED: return Color.parseColor("#E65100");
-            case CANCELLED: return Color.parseColor("#B71C1C");
-            case COMPLETED: return Color.parseColor("#0D47A1");
+            case "CONFIRMED": return Color.parseColor("#2E7D32");
+            case "PENDING": return Color.parseColor("#E65100");
+            case "CREATED": return Color.parseColor("#E65100");
+            case "CANCELLED": return Color.parseColor("#B71C1C");
+            case "COMPLETED": return Color.parseColor("#0D47A1");
             default: return Color.parseColor("#757575");
         }
     }
 
-    private String getStatusText(Appointment.AppointmentStatus status) {
+    private String getStatusText(String status) {
         switch (status) {
-            case CONFIRMED: return "Подтверждено";
-            case PENDING: return "Ожидание";
-            case CREATED: return "Создано";
-            case CANCELLED: return "Отменено";
-            case COMPLETED: return "Выполнено";
-            default: return status.toString();
+            case "CONFIRMED": return "Подтверждено";
+            case "PENDING": return "Ожидание";
+            case "CREATED": return "Создано";
+            case "CANCELLED": return "Отменено";
+            case "COMPLETED": return "Выполнено";
+            default: return status;
         }
     }
 
