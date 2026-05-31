@@ -22,6 +22,12 @@
         tools:layout="@layout/timeline_fragment" />
 
     <fragment
+        android:id="@+id/nav_stats"
+        android:name="com.example.frolovnails.admin.StatsFragment"
+        android:label="Статистика"
+        tools:layout="@layout/fragment_stats" />
+
+    <fragment
         android:id="@+id/nav_clients"
         android:name="com.example.frolovnails.admin.ClientsFragment"
         android:label="Клиенты"
@@ -34,15 +40,18 @@
         tools:layout="@layout/fragment_services_admin" />
 
     <fragment
+        android:id="@+id/nav_settings"
+        android:name="com.example.frolovnails.admin.SettingsFragment"
+        android:label="Настройки"
+        tools:layout="@layout/fragment_settings">
+
+
+    </fragment>
+
+    <fragment
         android:id="@+id/nav_schedule"
         android:name="com.example.frolovnails.admin.ScheduleFragment"
         android:label="Расписание"
         tools:layout="@layout/fragment_schedule" />
-
-    <fragment
-        android:id="@+id/nav_stats"
-        android:name="com.example.frolovnails.admin.StatsFragment"
-        android:label="Статистика"
-        tools:layout="@layout/fragment_stats" />
 
 </navigation>
