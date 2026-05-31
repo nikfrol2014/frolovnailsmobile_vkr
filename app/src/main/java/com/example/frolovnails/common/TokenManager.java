@@ -1,11 +1,13 @@
 package com.example.frolovnails.common;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
-import android.content.SharedPreferences;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
@@ -16,9 +18,18 @@ public class TokenManager {
     private static final String KEY_ROLE = "user_role";
 
     private final SharedPreferences sharedPreferences;
+    private OnTokenRefreshListener tokenRefreshListener;
+
+    public interface OnTokenRefreshListener {
+        void onTokenRefreshed(String newAccessToken);
+        void onTokenRefreshFailed();
+    }
+
+    public void setOnTokenRefreshListener(OnTokenRefreshListener listener) {
+        this.tokenRefreshListener = listener;
+    }
 
     public TokenManager(Context context) throws GeneralSecurityException, IOException {
-        // Новый способ создания MasterKey
         MasterKey masterKey = new MasterKey.Builder(context)
                 .setKeyGenParameterSpec(
                         new KeyGenParameterSpec.Builder(
@@ -65,5 +76,14 @@ public class TokenManager {
 
     public boolean isLoggedIn() {
         return getAccessToken() != null;
+    }
+
+    public void updateAccessToken(String newAccessToken) {
+        sharedPreferences.edit()
+                .putString(KEY_ACCESS_TOKEN, newAccessToken)
+                .apply();
+        if (tokenRefreshListener != null) {
+            tokenRefreshListener.onTokenRefreshed(newAccessToken);
+        }
     }
 }

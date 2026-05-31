@@ -12,7 +12,6 @@ import com.example.frolovnails.network.models.request.RegisterRequest;
 import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.AuthResponse;
 
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -21,6 +20,7 @@ public class AuthViewModel extends ViewModel {
 
     private final ApiService apiService;
     private final MutableLiveData<Resource<AuthResponse>> authResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<AuthResponse>> refreshResult = new MutableLiveData<>();
 
     public AuthViewModel() {
         this.apiService = ApiClient.getClient(null).create(ApiService.class);
@@ -28,6 +28,10 @@ public class AuthViewModel extends ViewModel {
 
     public LiveData<Resource<AuthResponse>> getAuthResult() {
         return authResult;
+    }
+
+    public LiveData<Resource<AuthResponse>> getRefreshResult() {
+        return refreshResult;
     }
 
     public void login(String phone, String password) {
@@ -74,7 +78,29 @@ public class AuthViewModel extends ViewModel {
         });
     }
 
+    public void refreshToken(String refreshToken) {
+        refreshResult.setValue(Resource.Loading.getInstance());
+
+        apiService.refreshToken("Bearer " + refreshToken).enqueue(new Callback<ApiResponse<AuthResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<AuthResponse>> call, Response<ApiResponse<AuthResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    refreshResult.setValue(new Resource.Success<>(response.body().getData()));
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка обновления токена";
+                    refreshResult.setValue(new Resource.Error<>(msg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<AuthResponse>> call, Throwable t) {
+                refreshResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
+            }
+        });
+    }
+
     public void resetResult() {
         authResult.setValue(null);
+        refreshResult.setValue(null);
     }
 }

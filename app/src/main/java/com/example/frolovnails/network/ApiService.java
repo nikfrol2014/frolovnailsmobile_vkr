@@ -19,6 +19,9 @@ public interface ApiService {
     @POST("/api/auth/register")
     Call<ApiResponse<AuthResponse>> register(@Body RegisterRequest request);
 
+    @POST("/api/auth/refresh")
+    Call<ApiResponse<AuthResponse>> refreshToken(@Header("Authorization") String token);
+
     // ========== Услуги ==========
     @GET("/api/services")
     Call<ApiResponse<List<Service>>> getServices();
