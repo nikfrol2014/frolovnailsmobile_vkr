@@ -6,7 +6,9 @@ import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.*;
 import com.example.frolovnails.network.models.response.*;
+//import com.example.frolovnails.network.models.response.*;
 import com.example.frolovnails.network.models.request.*;
+import com.example.frolovnails.network.models.response.stats.DashboardStatsResponse;
 
 public interface ApiService {
 
@@ -171,6 +173,40 @@ public interface ApiService {
     // Удалить блокировку
     @DELETE("/api/schedule/blocks/{id}")
     Call<ApiResponse<Void>> deleteScheduleBlock(@Path("id") Long id);
+
+    // ========== Статистика ==========
+
+    @GET("/api/stats/dashboard")
+    Call<ApiResponse<DashboardStatsResponse>> getDashboardStats(
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate
+    );
+
+    @GET("/api/stats/dashboard/period")
+    Call<ApiResponse<DashboardStatsResponse>> getDashboardStatsByPeriod(
+            @Query("period") String period,
+            @Query("referenceDate") String referenceDate
+    );
+
+    @GET("/api/stats/services/top")
+    Call<ApiResponse<List<DashboardStatsResponse.TopServiceStats>>> getTopServices(
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate,
+            @Query("limit") int limit
+    );
+
+    @GET("/api/stats/clients/top")
+    Call<ApiResponse<List<DashboardStatsResponse.TopClientStats>>> getTopClients(
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate,
+            @Query("limit") int limit
+    );
+
+    @GET("/api/stats/peak-hours")
+    Call<ApiResponse<List<DashboardStatsResponse.HourlyStats>>> getPeakHours(
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate
+    );
 
 
 }

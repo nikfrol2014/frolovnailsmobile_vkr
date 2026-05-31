@@ -5,6 +5,10 @@
         android:icon="@android:drawable/ic_menu_month"
         android:title="Календарь" />
     <item
+        android:id="@+id/nav_stats"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:title="Статистика" />
+    <item
         android:id="@+id/nav_clients"
         android:icon="@android:drawable/ic_menu_mylocation"
         android:title="Клиенты" />
