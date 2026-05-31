@@ -15,7 +15,6 @@ import com.example.frolovnails.network.models.response.ScheduleBlock;
 import com.example.frolovnails.network.models.response.ScheduleBlocksResponse;
 import com.example.frolovnails.network.models.response.TimelineResponse;
 
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -36,10 +35,15 @@ public class CalendarViewModel extends ViewModel {
     private final MutableLiveData<Resource<Appointment>> updateNotesResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<List<ScheduleBlock>>> blocksResult = new MutableLiveData<>();
 
+    // НОВЫЕ ПОЛЯ
+    private final MutableLiveData<Resource<Appointment>> moveAppointmentResult = new MutableLiveData<>();
+    private final MutableLiveData<Resource<Void>> deleteAppointmentResult = new MutableLiveData<>();
+
     public CalendarViewModel(TokenManager tokenManager) {
         this.apiService = ApiClient.getClient(tokenManager).create(ApiService.class);
     }
 
+    // Существующие геттеры
     public LiveData<Resource<Appointment>> getUpdateStatusResult() {
         return updateStatusResult;
     }
@@ -51,10 +55,21 @@ public class CalendarViewModel extends ViewModel {
     public LiveData<Resource<TimelineResponse>> getTimelineResult() {
         return timelineResult;
     }
+
     public LiveData<Resource<List<ScheduleBlock>>> getBlocksResult() {
         return blocksResult;
     }
 
+    // НОВЫЕ ГЕТТЕРЫ
+    public LiveData<Resource<Appointment>> getMoveAppointmentResult() {
+        return moveAppointmentResult;
+    }
+
+    public LiveData<Resource<Void>> getDeleteAppointmentResult() {
+        return deleteAppointmentResult;
+    }
+
+    // Существующие методы
     public void loadTimeline(String startDate, int daysCount) {
         timelineResult.setValue(Resource.Loading.getInstance());
         apiService.getTimeline(startDate, daysCount).enqueue(new Callback<ApiResponse<TimelineResponse>>() {
@@ -82,31 +97,9 @@ public class CalendarViewModel extends ViewModel {
 
     public void loadTimeline(int daysCount) {
         timelineResult.setValue(Resource.Loading.getInstance());
-
         Calendar cal = Calendar.getInstance();
         String startDate = dateFormat.format(cal.getTime());
-
-        apiService.getTimeline(startDate, daysCount).enqueue(new Callback<ApiResponse<TimelineResponse>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<TimelineResponse>> call, Response<ApiResponse<TimelineResponse>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    TimelineResponse data = response.body().getData();
-                    if (data != null) {
-                        timelineResult.setValue(new Resource.Success<>(data));
-                    } else {
-                        timelineResult.setValue(new Resource.Error<>("Нет данных"));
-                    }
-                } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки";
-                    timelineResult.setValue(new Resource.Error<>(msg));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<TimelineResponse>> call, Throwable t) {
-                timelineResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
-            }
-        });
+        loadTimeline(startDate, daysCount);
     }
 
     public void updateAppointmentStatus(Long appointmentId, UpdateAppointmentStatusRequest request) {
@@ -178,6 +171,57 @@ public class CalendarViewModel extends ViewModel {
             @Override
             public void onFailure(Call<ApiResponse<ScheduleBlocksResponse>> call, Throwable t) {
                 blocksResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
+            }
+        });
+    }
+
+    // ========== НОВЫЕ МЕТОДЫ ==========
+
+    /**
+     * Перенос записи (мастер)
+     */
+    public void moveAppointment(Long appointmentId, String newStartTime, Long newServiceId) {
+        moveAppointmentResult.setValue(Resource.Loading.getInstance());
+
+        apiService.moveAppointment(appointmentId, newStartTime, newServiceId).enqueue(new Callback<ApiResponse<Appointment>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Appointment>> call, Response<ApiResponse<Appointment>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Appointment data = response.body().getData();
+                    moveAppointmentResult.setValue(data != null ? new Resource.Success<>(data) : new Resource.Error<>("Ошибка переноса"));
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка переноса";
+                    moveAppointmentResult.setValue(new Resource.Error<>(msg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Appointment>> call, Throwable t) {
+                moveAppointmentResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
+            }
+        });
+    }
+
+    /**
+     * Полное удаление записи (мастер)
+     */
+    public void deleteAppointment(Long appointmentId) {
+        deleteAppointmentResult.setValue(Resource.Loading.getInstance());
+
+        apiService.deleteAppointment(appointmentId).enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    deleteAppointmentResult.setValue(new Resource.Success<>(null));
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка удаления";
+                    deleteAppointmentResult.setValue(new Resource.Error<>(msg));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                deleteAppointmentResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
             }
         });
     }

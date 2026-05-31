@@ -51,6 +51,9 @@ public interface ApiService {
 
     // ========== Записи (админ) ==========
 
+    @DELETE("/api/appointments/{id}")
+    Call<ApiResponse<Void>> deleteAppointment(@Path("id") Long id);
+
     @PATCH("/api/appointments/{id}/notes")
     Call<ApiResponse<Appointment>> updateMasterNotes(
             @Path("id") Long id,

@@ -18,11 +18,14 @@ import com.example.frolovnails.R;
 import com.example.frolovnails.calendar.views.SimpleTimelineView;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
+import com.example.frolovnails.network.models.request.UpdateAppointmentStatusRequest;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.ScheduleBlock;
 import com.example.frolovnails.network.models.response.TimelineResponse;
-import com.example.frolovnails.ui.CompleteAppointmentDialog;
+import com.example.frolovnails.ui.AppointmentActionDialog;
+import com.example.frolovnails.ui.ClientDetailsDialog;
 import com.example.frolovnails.ui.MasterNotesDialog;
+import com.example.frolovnails.ui.RescheduleDialog;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -62,26 +65,8 @@ public class TimelineFragment extends Fragment {
         btnNextDay = view.findViewById(R.id.btnNextDay);
         btnToday = view.findViewById(R.id.btnToday);
 
-        // ========== ОБРАБОТЧИК КЛИКА ПО ЗАПИСИ (ЗАВЕРШЕНИЕ) ==========
-        timelineView.setOnEventClickListener(appointment -> {
-            // Проверяем, можно ли завершить запись
-            String status = appointment.getStatus().toString();
-            if ("CANCELLED".equals(status)) {
-                Toast.makeText(getContext(), "Отменённую запись нельзя завершить", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if ("COMPLETED".equals(status)) {
-                Toast.makeText(getContext(), "Запись уже завершена", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Открываем диалог завершения записи
-            CompleteAppointmentDialog dialog = CompleteAppointmentDialog.newInstance(appointment);
-            dialog.show(getChildFragmentManager(), "complete_appointment");
-
-            // Обновляем таймлайн после закрытия диалога
-//            dialog.setOnDismissListener(d -> loadDataForDate());  // ← УБРАЛИ .getDialog()
-        });
+        // ========== ОБРАБОТЧИК КЛИКА ПО ЗАПИСИ (открыть меню действий) ==========
+        timelineView.setOnEventClickListener(this::showAppointmentActionDialog);
 
         // ========== ОБРАБОТЧИК КНОПКИ ЗАМЕТОК ==========
         timelineView.setOnNotesClickListener(appointment -> {
@@ -221,5 +206,185 @@ public class TimelineFragment extends Fragment {
             timelineView.setVisibility(View.VISIBLE);
             Toast.makeText(getContext(), ((Resource.Error<TimelineResponse>) resource).getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // ========== ДИАЛОГ ДЕЙСТВИЙ С ЗАПИСЬЮ ==========
+
+    private void showAppointmentActionDialog(Appointment appointment) {
+        if (appointment == null) {
+            Toast.makeText(getContext(), "Ошибка: запись не найдена", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AppointmentActionDialog dialog = AppointmentActionDialog.newInstance(appointment);
+        dialog.setOnActionListener(new AppointmentActionDialog.OnActionListener() {
+            @Override
+            public void onReschedule(Appointment appointment) {
+                showRescheduleDialog(appointment);
+            }
+
+            @Override
+            public void onCancel(Appointment appointment) {
+                showCancelConfirmationDialog(appointment);
+            }
+
+            @Override
+            public void onDelete(Appointment appointment) {
+                showDeleteConfirmationDialog(appointment);
+            }
+
+            @Override
+            public void onChangeStatus(Appointment appointment) {
+                showStatusChangeDialog(appointment);
+            }
+
+            @Override
+            public void onMasterNotes(Appointment appointment) {
+                MasterNotesDialog notesDialog = MasterNotesDialog.newInstance(appointment);
+                notesDialog.show(getChildFragmentManager(), "master_notes");
+            }
+
+            @Override
+            public void onClientDetails(Appointment appointment) {
+                ClientDetailsDialog detailsDialog = ClientDetailsDialog.newInstance(appointment.getClient().getId());
+                detailsDialog.show(getChildFragmentManager(), "client_details");
+            }
+        });
+        dialog.show(getChildFragmentManager(), "appointment_actions");
+    }
+
+    // ========== ПЕРЕНОС ЗАПИСИ ==========
+
+    private void showRescheduleDialog(Appointment appointment) {
+        String status = appointment.getStatus().toString();
+        if ("CANCELLED".equals(status)) {
+            Toast.makeText(getContext(), "❌ Отменённую запись нельзя перенести", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if ("COMPLETED".equals(status)) {
+            Toast.makeText(getContext(), "❌ Завершённую запись нельзя перенести", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        RescheduleDialog dialog = RescheduleDialog.newInstance(appointment);
+        dialog.setOnRescheduleListener(() -> {
+            loadDataForDate();
+            Toast.makeText(getContext(), "✅ Запись перенесена", Toast.LENGTH_SHORT).show();
+        });
+        dialog.show(getChildFragmentManager(), "reschedule");
+    }
+
+    // ========== ОТМЕНА ЗАПИСИ (статус CANCELLED) ==========
+
+    private void showCancelConfirmationDialog(Appointment appointment) {
+        String status = appointment.getStatus().toString();
+        if ("CANCELLED".equals(status)) {
+            Toast.makeText(getContext(), "❌ Запись уже отменена", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if ("COMPLETED".equals(status)) {
+            Toast.makeText(getContext(), "❌ Завершённую запись нельзя отменить", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Отмена записи")
+                .setMessage("Вы уверены, что хотите отменить запись?\n\n" +
+                        "👤 Клиент: " + appointment.getClient().getFirstName() + " " +
+                        (appointment.getClient().getLastName() != null ? appointment.getClient().getLastName() : "") + "\n" +
+                        "💅 Услуга: " + appointment.getService().getName() + "\n" +
+                        "⏰ Время: " + appointment.getStartTime() + " — " + appointment.getEndTime() + "\n\n" +
+                        "Запись будет переведена в статус ОТМЕНЕНО")
+                .setPositiveButton("Отменить", (dialog, which) -> {
+                    UpdateAppointmentStatusRequest request = new UpdateAppointmentStatusRequest();
+                    request.setStatus("CANCELLED");
+                    viewModel.updateAppointmentStatus(appointment.getId(), request);
+                    observeCancelResult();
+                })
+                .setNegativeButton("Нет", null)
+                .show();
+    }
+
+    private void observeCancelResult() {
+        viewModel.getUpdateStatusResult().observe(getViewLifecycleOwner(), resource -> {
+            if (resource instanceof Resource.Success) {
+                Toast.makeText(getContext(), "✅ Запись отменена", Toast.LENGTH_SHORT).show();
+                loadDataForDate();
+                viewModel.getUpdateStatusResult().removeObservers(getViewLifecycleOwner());
+            } else if (resource instanceof Resource.Error) {
+                Toast.makeText(getContext(), "❌ " + ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+                viewModel.getUpdateStatusResult().removeObservers(getViewLifecycleOwner());
+            }
+        });
+    }
+
+    // ========== УДАЛЕНИЕ ЗАПИСИ (полное) ==========
+
+    private void showDeleteConfirmationDialog(Appointment appointment) {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Удаление записи")
+                .setMessage("⚠️ ВНИМАНИЕ! Это действие необратимо.\n\n" +
+                        "Вы уверены, что хотите ПОЛНОСТЬЮ УДАЛИТЬ запись?\n\n" +
+                        "👤 Клиент: " + appointment.getClient().getFirstName() + " " +
+                        (appointment.getClient().getLastName() != null ? appointment.getClient().getLastName() : "") + "\n" +
+                        "💅 Услуга: " + appointment.getService().getName() + "\n" +
+                        "⏰ Время: " + appointment.getStartTime() + " — " + appointment.getEndTime())
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    viewModel.deleteAppointment(appointment.getId());
+                    observeDeleteResult();
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+
+    private void observeDeleteResult() {
+        viewModel.getDeleteAppointmentResult().observe(getViewLifecycleOwner(), resource -> {
+            if (resource instanceof Resource.Success) {
+                Toast.makeText(getContext(), "✅ Запись удалена", Toast.LENGTH_SHORT).show();
+                loadDataForDate();
+                viewModel.getDeleteAppointmentResult().removeObservers(getViewLifecycleOwner());
+            } else if (resource instanceof Resource.Error) {
+                Toast.makeText(getContext(), "❌ " + ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+                viewModel.getDeleteAppointmentResult().removeObservers(getViewLifecycleOwner());
+            }
+        });
+    }
+
+    // ========== ИЗМЕНЕНИЕ СТАТУСА ==========
+
+    private void showStatusChangeDialog(Appointment appointment) {
+        String[] statuses = {"Подтверждено", "Выполнено", "Отменено", "Ожидание"};
+        String[] statusValues = {"CONFIRMED", "COMPLETED", "CANCELLED", "PENDING"};
+
+        int checkedItem = 0;
+        String currentStatus = appointment.getStatus().toString();
+        for (int i = 0; i < statusValues.length; i++) {
+            if (statusValues[i].equals(currentStatus)) {
+                checkedItem = i;
+                break;
+            }
+        }
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Изменить статус")
+                .setSingleChoiceItems(statuses, checkedItem, (dialog, which) -> {
+                    String newStatus = statusValues[which];
+
+                    UpdateAppointmentStatusRequest request = new UpdateAppointmentStatusRequest();
+                    request.setStatus(newStatus);
+
+                    viewModel.updateAppointmentStatus(appointment.getId(), request);
+                    viewModel.getUpdateStatusResult().observe(getViewLifecycleOwner(), resource -> {
+                        if (resource instanceof Resource.Success) {
+                            Toast.makeText(getContext(), "✅ Статус обновлен", Toast.LENGTH_SHORT).show();
+                            loadDataForDate();
+                            dialog.dismiss();
+                        } else if (resource instanceof Resource.Error) {
+                            Toast.makeText(getContext(), "❌ " + ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 }

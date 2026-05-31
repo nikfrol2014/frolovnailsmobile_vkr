@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Информация о записи -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="1dp">
+
+        <TextView
+            android:id="@+id/tvAppointmentInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Кнопки действий -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btnReschedule"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✏️ Перенести запись"
+            android:drawableStart="@android:drawable/ic_menu_edit"
+            android:gravity="start"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/btnCancelAppointment"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="❌ Отменить запись"
+            android:drawableStart="@android:drawable/ic_menu_delete"
+            android:gravity="start"
+            android:padding="12dp"
+            android:textColor="@android:color/holo_red_dark" />
+
+        <Button
+            android:id="@+id/btnDeleteAppointment"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🗑️ Удалить запись"
+            android:drawableStart="@android:drawable/ic_menu_delete"
+            android:gravity="start"
+            android:padding="12dp"
+            android:textColor="@android:color/holo_red_dark" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="8dp"
+            android:background="@android:color/darker_gray" />
+
+        <Button
+            android:id="@+id/btnChangeStatus"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔄 Изменить статус"
+            android:drawableStart="@android:drawable/ic_menu_sort_by_size"
+            android:gravity="start"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/btnMasterNotes"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📝 Заметки мастера"
+            android:drawableStart="@android:drawable/ic_menu_edit"
+            android:gravity="start"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/btnClientDetails"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="👤 Детали клиента"
+            android:drawableStart="@android:drawable/ic_menu_info_details"
+            android:gravity="start"
+            android:padding="12dp" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnClose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Закрыть"
+        style="@style/Widget.Material3.Button.TextButton" />
+
+</LinearLayout>

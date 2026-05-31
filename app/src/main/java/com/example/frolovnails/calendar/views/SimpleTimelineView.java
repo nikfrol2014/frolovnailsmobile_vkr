@@ -267,7 +267,7 @@ public class SimpleTimelineView extends View {
 
             y += lineHeight;
             textPaint.setColor(Color.parseColor("#FFD700"));
-            // Стало (если есть фактическая цена, показываем её):
+            // Отображаем фактическую цену, если есть
             BigDecimal actualPrice = apt.getActualPrice();
             BigDecimal displayPrice = actualPrice != null ? actualPrice : apt.getService().getPrice();
             String priceText = displayPrice + " ₽ • " + apt.getService().getDurationMinutes() + " мин";
@@ -360,7 +360,7 @@ public class SimpleTimelineView extends View {
                         return true;
                     }
 
-                    // Проверяем клик по самой записи (для завершения)
+                    // Проверяем клик по самой записи
                     if (x >= leftMargin && x <= viewWidth - 8 &&
                             y >= top && y <= bottom) {
                         if (eventClickListener != null) {
