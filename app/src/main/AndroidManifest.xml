@@ -28,6 +28,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".client.FullscreenImageActivity"
+            android:theme="@style/Theme.FrolovNails"
+            android:configChanges="orientation|screenSize" />
     </application>
 
 </manifest>

@@ -1,28 +1,18 @@
 package com.example.frolovnails.network.models.response;
 
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
 
-public class SliderItem {
-    @SerializedName("imageUrl")
+public class SliderItem implements Serializable {
     private String imageUrl;
-
-    @SerializedName("title")
     private String title;
-
-    @SerializedName("description")
     private String description;
-
-    @SerializedName("actionType")
     private String actionType;
-
-    @SerializedName("actionValue")
     private String actionValue;
-
-    @SerializedName("orderIndex")
     private int orderIndex;
 
     public SliderItem() {}
 
+    // Геттеры и сеттеры
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 

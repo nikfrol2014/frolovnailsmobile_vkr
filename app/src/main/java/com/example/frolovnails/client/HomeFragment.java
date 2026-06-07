@@ -1,15 +1,20 @@
 package com.example.frolovnails.client;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -43,6 +48,10 @@ public class HomeFragment extends Fragment {
     private View progressBarSlider;
     private SliderAdapter sliderAdapter;
     private ContentViewModel contentViewModel;
+
+    private Handler autoScrollHandler = new Handler();
+    private Runnable autoScrollRunnable;
+    private boolean isAutoScrolling = true;
 
     // Услуги
     private RecyclerView rvServices;
@@ -153,15 +162,104 @@ public class HomeFragment extends Fragment {
         setupEmptySlider();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void setupSlider(List<SliderItem> slides) {
         sliderAdapter = new SliderAdapter(slides);
         viewPagerSlider.setAdapter(sliderAdapter);
+
+        // Устанавливаем слушатель клика на фото
+        sliderAdapter.setOnImageClickListener(this::openFullscreenGallery);
 
         new TabLayoutMediator(tabLayoutSlider, viewPagerSlider,
                 (tab, position) -> {}).attach();
 
         viewPagerSlider.setVisibility(View.VISIBLE);
         tabLayoutSlider.setVisibility(View.VISIBLE);
+
+        startAutoScroll();
+
+        viewPagerSlider.setOnTouchListener((v, event) -> {
+            stopAutoScroll();
+            return false;
+        });
+    }
+
+    private void startAutoScroll() {
+        if (!isAutoScrolling) return;
+
+        autoScrollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                int currentItem = viewPagerSlider.getCurrentItem();
+                int totalItems = sliderAdapter.getItemCount();
+                if (totalItems > 0) {
+                    int nextItem = (currentItem + 1) % totalItems;
+                    viewPagerSlider.setCurrentItem(nextItem, true);
+                    autoScrollHandler.postDelayed(this, 5000); // 5 секунд
+                }
+            }
+        };
+        autoScrollHandler.postDelayed(autoScrollRunnable, 5000);
+    }
+
+    private void stopAutoScroll() {
+        if (autoScrollRunnable != null) {
+            autoScrollHandler.removeCallbacks(autoScrollRunnable);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        stopAutoScroll();
+    }
+
+    private void showFullscreenImage(String imageUrl, String title) {
+        String fullUrl = "http://192.168.0.111:8080" + imageUrl;
+
+        // Создаем диалог
+        androidx.appcompat.app.AlertDialog.Builder builder =
+                new androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.FullscreenDialogTheme);
+
+        // Инфлейтим кастомный layout
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_fullscreen_image, null);
+
+        ImageView imageView = dialogView.findViewById(R.id.ivFullscreenImage);
+        ImageButton btnClose = dialogView.findViewById(R.id.btnClose);
+
+        // Загружаем изображение
+        Glide.with(this)
+                .load(fullUrl)
+                .placeholder(R.drawable.ic_launcher_foreground)
+                .error(R.drawable.ic_launcher_foreground)
+                .into(imageView);
+
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        // Устанавливаем полноэкранный стиль
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT);
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        // Закрытие по кнопке
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        // Закрытие по клику на само изображение
+        imageView.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void openFullscreenGallery(List<SliderItem> images, int position) {
+        Intent intent = new Intent(getContext(), FullscreenImageActivity.class);
+        intent.putExtra(FullscreenImageActivity.EXTRA_IMAGES, (ArrayList<SliderItem>) images);
+        intent.putExtra(FullscreenImageActivity.EXTRA_POSITION, position);
+        startActivity(intent);
     }
 
     private void setupEmptySlider() {
@@ -285,9 +383,18 @@ public class HomeFragment extends Fragment {
 
         private final List<SliderItem> items;
         private final String baseUrl = "http://192.168.0.111:8080";
+        private OnImageClickListener imageClickListener;
+
+        interface OnImageClickListener {
+            void onImageClick(List<SliderItem> images, int position);
+        }
 
         SliderAdapter(List<SliderItem> items) {
             this.items = items;
+        }
+
+        void setOnImageClickListener(OnImageClickListener listener) {
+            this.imageClickListener = listener;
         }
 
         @NonNull
@@ -312,6 +419,13 @@ public class HomeFragment extends Fragment {
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .error(R.drawable.ic_launcher_foreground)
                     .into(holder.imageView);
+
+            // Клик по фото - открываем полноэкранную галерею
+            holder.imageView.setOnClickListener(v -> {
+                if (imageClickListener != null) {
+                    imageClickListener.onImageClick(items, holder.getAdapterPosition());
+                }
+            });
         }
 
         @Override
