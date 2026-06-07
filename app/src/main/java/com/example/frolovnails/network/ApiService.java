@@ -43,11 +43,24 @@ public interface ApiService {
     );
 
     // ========== Записи (клиент) ==========
+
+    @GET("/api/appointments/my/filtered")
+    Call<ApiResponse<Map<String, Object>>> getMyAppointmentsFiltered(
+            @Query("status") String status,
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
     @POST("/api/appointments/client")
     Call<ApiResponse<Appointment>> createClientAppointment(@Body CreateAppointmentRequest request);
 
     @GET("/api/appointments/my")
-    Call<ApiResponse<List<Appointment>>> getMyAppointments();
+    Call<ApiResponse<AppointmentsListResponse>> getMyAppointments();
+
+//    @GET("/api/appointments/my")
+//    Call<ApiResponse<List<Appointment>>> getMyAppointments();
 
     @PATCH("/api/appointments/my/{id}/cancel")
     Call<ApiResponse<Appointment>> cancelAppointment(@Path("id") Long id);

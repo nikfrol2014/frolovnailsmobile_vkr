@@ -3,13 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph_client"
-    app:startDestination="@id/nav_services">
+    app:startDestination="@id/nav_home">
 
     <fragment
-        android:id="@+id/nav_services"
-        android:name="com.example.frolovnails.client.ServicesFragment"
-        android:label="Услуги"
-        tools:layout="@layout/fragment_services" />
+        android:id="@+id/nav_home"
+        android:name="com.example.frolovnails.client.HomeFragment"
+        android:label="Главная"
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_home_to_booking"
+            app:destination="@id/nav_booking" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/nav_booking"
@@ -27,6 +33,6 @@
         android:id="@+id/nav_profile"
         android:name="com.example.frolovnails.client.ProfileFragment"
         android:label="Профиль"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile_client" />
 
 </navigation>

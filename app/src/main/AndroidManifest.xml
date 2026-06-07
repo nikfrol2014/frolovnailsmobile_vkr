@@ -14,7 +14,10 @@
         android:theme="@style/Theme.FrolovNails"
         android:networkSecurityConfig="@xml/network_security_config"
         >
-        <activity android:name=".client.ClientMainActivity" />
+        <activity
+            android:name=".client.ClientMainActivity"
+            android:exported="false"/>
+
         <activity android:name=".admin.AdminMainActivity" />
         <activity
             android:name=".MainActivity"
