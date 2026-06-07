@@ -1,31 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Основные цвета -->
-    <color name="primary">#4CAF50</color>
-    <color name="primary_dark">#388E3C</color>
-    <color name="secondary">#FF9800</color>
-    <color name="secondary_dark">#F57C00</color>
-    <color name="accent">#2196F3</color>
+    <!-- Основные цвета (приглушенная розовая гамма) -->
+    <color name="primary">#C2185B</color>        <!-- Насыщенный розовый -->
+    <color name="primary_dark">#880E4F</color>   <!-- Темно-розовый -->
+    <color name="primary_light">#F8BBD0</color>  <!-- Светло-розовый -->
+    <color name="secondary">#9E9E9E</color>      <!-- Серый -->
+    <color name="secondary_dark">#757575</color> <!-- Темно-серый -->
+    <color name="accent">#E91E63</color>         <!-- Акцентный розовый -->
 
     <!-- Фоны -->
-    <color name="background">#F5F5F5</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F0F0F0</color>
+    <color name="background">#FAFAFA</color>     <!-- Почти белый -->
+    <color name="background_dark">#1A1A1A</color> <!-- Почти черный -->
+    <color name="surface">#FFFFFF</color>         <!-- Белый -->
+    <color name="surface_dark">#2C2C2C</color>    <!-- Темно-серый -->
+    <color name="surface_variant">#F5F5F5</color> <!-- Светло-серый -->
 
     <!-- Текст -->
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
-    <color name="text_disabled">#9E9E9E</color>
+    <color name="text_primary">#212121</color>    <!-- Почти черный -->
+    <color name="text_secondary">#757575</color>  <!-- Серый -->
+    <color name="text_hint">#BDBDBD</color>       <!-- Светло-серый -->
+    <color name="text_on_primary">#FFFFFF</color> <!-- Белый -->
 
-    <!-- Статусы записей -->
-    <color name="status_confirmed">#4CAF50</color>
-    <color name="status_pending">#FF9800</color>
-    <color name="status_cancelled">#F44336</color>
-    <color name="status_completed">#2196F3</color>
-    <color name="status_created">#FF9800</color>
+    <!-- Статусы записей (приглушенные) -->
+    <color name="status_confirmed">#81C784</color>     <!-- Мятный -->
+    <color name="status_confirmed_dark">#4CAF50</color>
+    <color name="status_pending">#FFD54F</color>       <!-- Приглушенный желтый -->
+    <color name="status_pending_dark">#FFC107</color>
+    <color name="status_cancelled">#E57373</color>     <!-- Приглушенный красный -->
+    <color name="status_cancelled_dark">#EF5350</color>
+    <color name="status_completed">#64B5F6</color>     <!-- Приглушенный синий -->
+    <color name="status_completed_dark">#42A5F5</color>
+    <color name="status_created">#FFB74D</color>       <!-- Приглушенный оранжевый -->
 
     <!-- Разное -->
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="divider">#E0E0E0</color>
+    <color name="divider">#E0E0E0</color>              <!-- Светло-серый -->
+    <color name="divider_dark">#3D3D3D</color>         <!-- Темно-серый -->
+    <color name="error">#EF5350</color>                <!-- Красный -->
+    <color name="success">#81C784</color>              <!-- Зеленый -->
+    <color name="warning">#FFB74D</color>              <!-- Оранжевый -->
 </resources>

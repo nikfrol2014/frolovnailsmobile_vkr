@@ -87,29 +87,32 @@ public class SimpleTimelineView extends View {
 
         Context context = getContext();
 
+        // Сетка
         gridPaint = new Paint();
-        gridPaint.setColor(getColor(context, R.color.divider));
+        gridPaint.setColor(ContextCompat.getColor(context, R.color.divider));
         gridPaint.setStrokeWidth(1f);
 
+        // Текст времени
         textPaint = new Paint();
-        textPaint.setColor(getColor(context, R.color.text_secondary));
+        textPaint.setColor(ContextCompat.getColor(context, R.color.text_secondary));
         textPaint.setTextSize(12 * density);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
         eventPaint = new Paint();
         eventPaint.setStyle(Paint.Style.FILL);
 
+        // Линия текущего времени
         currentTimePaint = new Paint();
-        currentTimePaint.setColor(getColor(context, R.color.status_cancelled));
+        currentTimePaint.setColor(ContextCompat.getColor(context, R.color.status_cancelled));
         currentTimePaint.setStrokeWidth(2f);
 
+        // Блокировки
         blockPaint = new Paint();
         blockPaint.setColor(ContextCompat.getColor(context, R.color.status_cancelled));
-        blockPaint.setAlpha(100);
+        blockPaint.setAlpha(80);
         blockPaint.setStyle(Paint.Style.FILL);
-
         blockTextPaint = new Paint();
-        blockTextPaint.setColor(getColor(context, R.color.white));
+        blockTextPaint.setColor(ContextCompat.getColor(context, R.color.text_on_primary));
         blockTextPaint.setTextSize(12 * density);
 
         startCurrentTimeUpdater();
@@ -296,20 +299,20 @@ public class SimpleTimelineView extends View {
 
             // Фон кнопки
             Paint buttonBgPaint = new Paint();
-            buttonBgPaint.setColor(Color.parseColor("#444444"));
+            buttonBgPaint.setColor(ContextCompat.getColor(getContext(), R.color.secondary_dark));
             buttonBgPaint.setStyle(Paint.Style.FILL);
             canvas.drawRoundRect(buttonRect, 8, 8, buttonBgPaint);
 
             // Рамка кнопки
             Paint buttonBorderPaint = new Paint();
-            buttonBorderPaint.setColor(Color.parseColor("#FFD700"));
+            buttonBorderPaint.setColor(ContextCompat.getColor(getContext(), R.color.primary_light));
             buttonBorderPaint.setStyle(Paint.Style.STROKE);
             buttonBorderPaint.setStrokeWidth(1.5f);
             canvas.drawRoundRect(buttonRect, 8, 8, buttonBorderPaint);
 
             // Текст кнопки
             Paint buttonTextPaint = new Paint();
-            buttonTextPaint.setColor(Color.parseColor("#FFD700"));
+            buttonTextPaint.setColor(ContextCompat.getColor(getContext(), R.color.text_on_primary));
             buttonTextPaint.setTextSize(18 * density);
             buttonTextPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText("📝", buttonX + buttonSize / 2, buttonY + buttonSize - 10, buttonTextPaint);
@@ -390,25 +393,36 @@ public class SimpleTimelineView extends View {
     private int getBackgroundColorForStatus(String status) {
         Context context = getContext();
         switch (status) {
-            case "CONFIRMED": return ContextCompat.getColor(context, R.color.status_confirmed);
-            case "PENDING": return ContextCompat.getColor(context, R.color.status_pending);
-            case "CREATED": return ContextCompat.getColor(context, R.color.status_created);
-            case "CANCELLED": return ContextCompat.getColor(context, R.color.status_cancelled);
-            case "COMPLETED": return ContextCompat.getColor(context, R.color.status_completed);
-            default: return ContextCompat.getColor(context, R.color.text_disabled);
+            case "CONFIRMED":
+                return ContextCompat.getColor(context, R.color.status_confirmed);
+            case "PENDING":
+                return ContextCompat.getColor(context, R.color.status_pending);
+            case "CREATED":
+                return ContextCompat.getColor(context, R.color.status_created);
+            case "CANCELLED":
+                return ContextCompat.getColor(context, R.color.status_cancelled);
+            case "COMPLETED":
+                return ContextCompat.getColor(context, R.color.status_completed);
+            default:
+                return ContextCompat.getColor(context, R.color.text_hint);
         }
     }
 
     private int getBorderColorForStatus(String status) {
-        // Более темный оттенок для рамки
         Context context = getContext();
         switch (status) {
-            case "CONFIRMED": return ContextCompat.getColor(context, R.color.primary_dark);
-            case "PENDING": return ContextCompat.getColor(context, R.color.secondary_dark);
-            case "CREATED": return ContextCompat.getColor(context, R.color.secondary_dark);
-            case "CANCELLED": return ContextCompat.getColor(context, R.color.status_cancelled);
-            case "COMPLETED": return ContextCompat.getColor(context, R.color.accent);
-            default: return ContextCompat.getColor(context, R.color.text_disabled);
+            case "CONFIRMED":
+                return ContextCompat.getColor(context, R.color.status_confirmed_dark);
+            case "PENDING":
+                return ContextCompat.getColor(context, R.color.status_pending_dark);
+            case "CREATED":
+                return ContextCompat.getColor(context, R.color.status_pending_dark);
+            case "CANCELLED":
+                return ContextCompat.getColor(context, R.color.status_cancelled_dark);
+            case "COMPLETED":
+                return ContextCompat.getColor(context, R.color.status_completed_dark);
+            default:
+                return ContextCompat.getColor(context, R.color.text_hint);
         }
     }
 
