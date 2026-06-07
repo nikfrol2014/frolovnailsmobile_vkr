@@ -276,16 +276,27 @@ public class MyAppointmentsFragment extends Fragment {
     }
 
     private void showAppointmentDetailsDialog(Appointment appointment) {
-        // Диалог с деталями записи
+        java.math.BigDecimal actualPrice = appointment.getActualPrice();
+        java.math.BigDecimal displayPrice = actualPrice != null ? actualPrice : appointment.getService().getPrice();
+        String priceText = displayPrice + " ₽";
+        if (actualPrice != null) {
+            priceText += " (было " + appointment.getService().getPrice() + " ₽)";
+        }
+
+        String clientNotesText = "";
+        if (appointment.getClientNotes() != null && !appointment.getClientNotes().isEmpty()) {
+            clientNotesText = "\n✏️ Ваши пожелания: " + appointment.getClientNotes();
+        }
+
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Детали записи")
                 .setMessage(
                         "💅 Услуга: " + appointment.getService().getName() + "\n" +
                                 "📅 Дата: " + appointment.getStartTime() + "\n" +
-                                "💰 Цена: " + appointment.getService().getPrice() + " ₽\n" +
+                                "💰 Цена: " + priceText + "\n" +
                                 "📊 Статус: " + getStatusText(appointment.getStatus()) + "\n" +
-                                (appointment.getMasterNotes() != null ? "📝 Заметки мастера: " + appointment.getMasterNotes() : "") + "\n" +
-                                (appointment.getClientNotes() != null ? "✏️ Ваши пожелания: " + appointment.getClientNotes() : "")
+                                (appointment.getMasterNotes() != null ? "📝 Заметки мастера: " + appointment.getMasterNotes() : "") +
+                                clientNotesText
                 )
                 .setPositiveButton("Закрыть", null)
                 .show();

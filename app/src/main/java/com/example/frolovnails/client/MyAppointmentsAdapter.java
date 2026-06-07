@@ -70,7 +70,7 @@ public class MyAppointmentsAdapter extends RecyclerView.Adapter<MyAppointmentsAd
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvServiceName, tvDateTime, tvStatus, tvPrice;
+        TextView tvServiceName, tvDateTime, tvStatus, tvPrice, tvClientNotes;
         Button btnCancel;
 
         ViewHolder(@NonNull View itemView) {
@@ -80,6 +80,7 @@ public class MyAppointmentsAdapter extends RecyclerView.Adapter<MyAppointmentsAd
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvPrice = itemView.findViewById(R.id.tvPrice);
             btnCancel = itemView.findViewById(R.id.btnCancel);
+            tvClientNotes = itemView.findViewById(R.id.tvClientNotes);
         }
 
         @SuppressLint("SetTextI18n")
@@ -102,6 +103,13 @@ public class MyAppointmentsAdapter extends RecyclerView.Adapter<MyAppointmentsAd
                 }
             } else {
                 tvPrice.setTextColor(0xFF2196F3); // Синий
+            }
+
+            if (appointment.getClientNotes() != null && !appointment.getClientNotes().isEmpty()) {
+                tvClientNotes.setVisibility(View.VISIBLE);
+                tvClientNotes.setText("✏️ " + appointment.getClientNotes());
+            } else {
+                tvClientNotes.setVisibility(View.GONE);
             }
 
             // Статус и цвет

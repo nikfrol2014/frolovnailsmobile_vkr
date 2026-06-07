@@ -21,6 +21,7 @@ import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.ClientDetailsResponse;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 
 public class ClientDetailsDialog extends DialogFragment {
@@ -161,14 +162,40 @@ public class ClientDetailsDialog extends DialogFragment {
         // Списки записей
         if (data.getRecentAppointments() != null && !data.getRecentAppointments().isEmpty()) {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < Math.min(3, data.getRecentAppointments().size()); i++) {
+            for (int i = 0; i < Math.min(5, data.getRecentAppointments().size()); i++) {
                 Appointment apt = data.getRecentAppointments().get(i);
-                sb.append("• ").append(apt.getStartTime()).append(" — ")
-                        .append(apt.getService().getName()).append("\n");
+
+                BigDecimal displayPrice = apt.getActualPrice() != null ? apt.getActualPrice() : apt.getService().getPrice();
+                String priceInfo = "💰 " + displayPrice + " ₽";
+                if (apt.getActualPrice() != null) {
+                    priceInfo += " (было " + apt.getService().getPrice() + " ₽)";
+                }
+
+                String servicesInfo = "";
+                if (apt.getActualServices() != null && !apt.getActualServices().isEmpty()) {
+                    servicesInfo = "\n   📋 Фактически: " + apt.getActualServices();
+                }
+
+                String commentInfo = "";
+                if (apt.getMasterCompletionComment() != null && !apt.getMasterCompletionComment().isEmpty()) {
+                    commentInfo = "\n   💬 Комментарий: " + apt.getMasterCompletionComment();
+                }
+
+                // ДОБАВИТЬ ЗАМЕТКИ КЛИЕНТА
+                String clientNotesInfo = "";
+                if (apt.getClientNotes() != null && !apt.getClientNotes().isEmpty()) {
+                    clientNotesInfo = "\n   ✏️ Пожелания: " + apt.getClientNotes();
+                }
+
+                sb.append("• ").append(apt.getStartTime()).append("\n")
+                        .append("  ").append(apt.getService().getName()).append("\n")
+                        .append("  ").append(priceInfo)
+                        .append(servicesInfo)
+                        .append(commentInfo)
+                        .append(clientNotesInfo)
+                        .append("\n\n");
             }
             tvRecentAppointments.setText(sb.toString());
-        } else {
-            tvRecentAppointments.setText("Нет истории посещений");
         }
 
         if (data.getUpcomingAppointments() != null && !data.getUpcomingAppointments().isEmpty()) {

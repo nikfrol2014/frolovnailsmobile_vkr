@@ -57,7 +57,7 @@ public class BookingFragment extends Fragment {
     private String selectedDate;
 
     // Шаг 3: Выбор времени
-    private MaterialCardView cardTimeSelection;
+    private MaterialCardView cardTimeSelection, cardNotes;
     private RecyclerView rvAvailableSlots;
     private AvailableSlotsAdapter slotsAdapter;
     private String selectedSlot;
@@ -123,8 +123,9 @@ public class BookingFragment extends Fragment {
         tvStep3Status = view.findViewById(R.id.tvStep3Status);
 
         // Шаг 4
-        etNotes = view.findViewById(R.id.etNotes);
         btnConfirmBooking = view.findViewById(R.id.btnConfirmBooking);
+        cardNotes = view.findViewById(R.id.cardNotes);
+        etNotes = view.findViewById(R.id.etNotes);
 
         progressBar = view.findViewById(R.id.progressBar);
 
@@ -279,6 +280,9 @@ public class BookingFragment extends Fragment {
                 });
                 cardTimeSelection.setVisibility(View.VISIBLE);
                 rvAvailableSlots.setVisibility(View.VISIBLE);
+                // ПОКАЗЫВАЕМ КАРТОЧКУ С ЗАМЕТКАМИ
+                cardNotes.setVisibility(View.VISIBLE);
+                btnConfirmBooking.setVisibility(View.VISIBLE);
             } else {
                 Toast.makeText(getContext(), "Нет доступного времени на выбранную дату", Toast.LENGTH_SHORT).show();
                 cardTimeSelection.setVisibility(View.GONE);
@@ -375,18 +379,17 @@ public class BookingFragment extends Fragment {
             return;
         }
 
+        // Получаем заметки из поля
+        String notes = etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
+
         // Извлекаем время из слота
         String timeOnly = extractTimeFromSlot(selectedSlot);
-
-        // Формируем дату и время в правильном формате: "dd.MM.yyyy HH:mm"
         String startTime = selectedDate + " " + timeOnly;
-
-        String notes = etNotes.getText() != null ? etNotes.getText().toString() : "";
 
         CreateAppointmentRequest request = new CreateAppointmentRequest();
         request.setServiceId(selectedServiceId);
         request.setStartTime(startTime);
-        request.setClientNotes(notes);
+        request.setClientNotes(notes);  // ← заметки клиента
 
         android.util.Log.d("BookingFragment", "Отправка запроса: serviceId=" + selectedServiceId +
                 ", startTime=" + startTime + ", notes=" + notes);
@@ -430,6 +433,10 @@ public class BookingFragment extends Fragment {
         btnConfirmBooking.setVisibility(View.GONE);
         cardTimeSelection.setVisibility(View.GONE);
         rvServices.setVisibility(View.GONE);
+
+        // Скрываем карточку заметок
+        cardNotes.setVisibility(View.GONE);
+        etNotes.setText("");
     }
 
     // Внутренний адаптер для доступных дней

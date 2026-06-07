@@ -30,6 +30,16 @@
             android:textSize="12sp"
             android:textColor="@color/text_secondary" />
 
+        <!-- ДОБАВИТЬ - заметки клиента -->
+        <TextView
+            android:id="@+id/tvClientNotes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            android:visibility="gone" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -51,8 +61,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:ellipsize="end"
-                android:maxLines="1" />
+                android:textColor="@color/status_completed" />
 
             <Button
                 android:id="@+id/btnCancel"

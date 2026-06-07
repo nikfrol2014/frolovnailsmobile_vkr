@@ -317,6 +317,16 @@ public class SimpleTimelineView extends View {
             buttonTextPaint.setTextAlign(Paint.Align.CENTER);
             canvas.drawText("📝", buttonX + buttonSize / 2, buttonY + buttonSize - 10, buttonTextPaint);
 
+            if (apt.getClientNotes() != null && !apt.getClientNotes().isEmpty()) {
+                y += lineHeight;
+                textPaint.setColor(Color.parseColor("#CCCCCC"));
+                textPaint.setTextSize(11 * density);
+                String notesPreview = apt.getClientNotes().length() > 30
+                        ? "✏️ " + apt.getClientNotes().substring(0, 30) + "..."
+                        : "✏️ " + apt.getClientNotes();
+                canvas.drawText(notesPreview, x, y, textPaint);
+            }
+
             // Заметки мастера
             if (apt.getMasterNotes() != null && !apt.getMasterNotes().isEmpty()) {
                 y += lineHeight;

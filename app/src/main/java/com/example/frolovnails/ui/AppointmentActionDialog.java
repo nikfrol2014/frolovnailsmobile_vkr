@@ -87,6 +87,16 @@ public class AppointmentActionDialog extends DialogFragment {
             tvInfo.setText(info);
         }
 
+        TextView tvClientNotes = view.findViewById(R.id.tvClientNotes);
+        View cardClientNotes = view.findViewById(R.id.cardClientNotes);
+
+        if (appointment.getClientNotes() != null && !appointment.getClientNotes().isEmpty()) {
+            cardClientNotes.setVisibility(View.VISIBLE);
+            tvClientNotes.setText(appointment.getClientNotes());
+        } else {
+            cardClientNotes.setVisibility(View.GONE);
+        }
+
         btnReschedule.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onReschedule(appointment);
