@@ -228,4 +228,8 @@ public interface ApiService {
     );
 
 
+    // для фото
+
+    @GET("/api/content/slider")
+    Call<ApiResponse<List<SliderItem>>> getSliderItems();
 }

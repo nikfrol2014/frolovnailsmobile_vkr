@@ -16,11 +16,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.bumptech.glide.Glide;
 import com.example.frolovnails.R;
 import com.example.frolovnails.adapters.ServicesAdapter;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Service;
+import com.example.frolovnails.network.models.response.SliderItem;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -38,13 +40,15 @@ public class HomeFragment extends Fragment {
     // Слайдер
     private ViewPager2 viewPagerSlider;
     private TabLayout tabLayoutSlider;
+    private View progressBarSlider;
     private SliderAdapter sliderAdapter;
+    private ContentViewModel contentViewModel;
 
     // Услуги
     private RecyclerView rvServices;
     private ServicesAdapter servicesAdapter;
     private ServicesViewModel servicesViewModel;
-    private View progressBar;
+    private View progressBarServices;
     private TextView tvEmptyServices;
 
     // Инфо-карточки
@@ -62,9 +66,8 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         initViews(view);
-        initSlider();
-        initServices();
-        initViewModel();
+        initViewModels();
+        loadSliderFromServer();
         loadServices();
         setupClickListeners();
         setGreeting();
@@ -75,9 +78,10 @@ public class HomeFragment extends Fragment {
 
         viewPagerSlider = view.findViewById(R.id.viewPagerSlider);
         tabLayoutSlider = view.findViewById(R.id.tabLayoutSlider);
+        progressBarSlider = view.findViewById(R.id.progressBarSlider);
 
         rvServices = view.findViewById(R.id.rvServices);
-        progressBar = view.findViewById(R.id.progressBar);
+        progressBarServices = view.findViewById(R.id.progressBar);
         tvEmptyServices = view.findViewById(R.id.tvEmptyServices);
 
         cardAddress = view.findViewById(R.id.cardAddress);
@@ -94,23 +98,22 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void initSlider() {
-        // Слайды с акциями (можно загружать с сервера или статические)
-        List<SliderItem> slides = new ArrayList<>();
-        slides.add(new SliderItem(R.drawable.ic_launcher_foreground, "Акция: Маникюр + Педикюр = -20%"));
-        slides.add(new SliderItem(R.drawable.ic_launcher_foreground, "Новинка: Дизайн с фольгой"));
-        slides.add(new SliderItem(R.drawable.ic_launcher_foreground, "Подарок имениннику: скидка 15%"));
+    private void initViewModels() {
+        // ViewModel для слайдера
+        try {
+            TokenManager tokenManager = new TokenManager(requireContext());
+            contentViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+                @NonNull
+                @Override
+                public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                    return (T) new ContentViewModel(tokenManager);
+                }
+            }).get(ContentViewModel.class);
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+        }
 
-        sliderAdapter = new SliderAdapter(slides);
-        viewPagerSlider.setAdapter(sliderAdapter);
-
-        new TabLayoutMediator(tabLayoutSlider, viewPagerSlider,
-                (tab, position) -> {
-                    // Можно установить иконки или текст
-                }).attach();
-    }
-
-    private void initServices() {
+        // ViewModel для услуг
         servicesViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
             @NonNull
             @Override
@@ -124,10 +127,47 @@ public class HomeFragment extends Fragment {
                 }
             }
         }).get(ServicesViewModel.class);
+
+        servicesViewModel.getServicesResult().observe(getViewLifecycleOwner(), this::handleServicesResult);
     }
 
-    private void initViewModel() {
-        servicesViewModel.getServicesResult().observe(getViewLifecycleOwner(), this::handleServicesResult);
+    private void loadSliderFromServer() {
+        if (contentViewModel == null) return;
+
+        progressBarSlider.setVisibility(View.VISIBLE);
+        contentViewModel.loadSliderItems();
+        contentViewModel.getSliderResult().observe(getViewLifecycleOwner(), this::handleSliderResult);
+    }
+
+    private void handleSliderResult(Resource<List<SliderItem>> resource) {
+        progressBarSlider.setVisibility(View.GONE);
+
+        if (resource instanceof Resource.Success) {
+            List<SliderItem> slides = ((Resource.Success<List<SliderItem>>) resource).getData();
+            if (slides != null && !slides.isEmpty()) {
+                setupSlider(slides);
+                return;
+            }
+        }
+        // Если данных нет или ошибка - показываем заглушку
+        setupEmptySlider();
+    }
+
+    private void setupSlider(List<SliderItem> slides) {
+        sliderAdapter = new SliderAdapter(slides);
+        viewPagerSlider.setAdapter(sliderAdapter);
+
+        new TabLayoutMediator(tabLayoutSlider, viewPagerSlider,
+                (tab, position) -> {}).attach();
+
+        viewPagerSlider.setVisibility(View.VISIBLE);
+        tabLayoutSlider.setVisibility(View.VISIBLE);
+    }
+
+    private void setupEmptySlider() {
+        // Скрываем слайдер или показываем сообщение
+        viewPagerSlider.setVisibility(View.GONE);
+        tabLayoutSlider.setVisibility(View.GONE);
     }
 
     private void loadServices() {
@@ -138,31 +178,54 @@ public class HomeFragment extends Fragment {
         if (resource == null) return;
 
         if (resource instanceof Resource.Loading) {
-            progressBar.setVisibility(View.VISIBLE);
-            rvServices.setVisibility(View.GONE);
-            tvEmptyServices.setVisibility(View.GONE);
+            if (progressBarServices != null) {
+                progressBarServices.setVisibility(View.VISIBLE);
+            }
+            if (rvServices != null) {
+                rvServices.setVisibility(View.GONE);
+            }
+            if (tvEmptyServices != null) {
+                tvEmptyServices.setVisibility(View.GONE);
+            }
         } else if (resource instanceof Resource.Success) {
-            progressBar.setVisibility(View.GONE);
+            if (progressBarServices != null) {
+                progressBarServices.setVisibility(View.GONE);
+            }
             List<Service> services = ((Resource.Success<List<Service>>) resource).getData();
 
             if (services == null || services.isEmpty()) {
-                tvEmptyServices.setVisibility(View.VISIBLE);
-                rvServices.setVisibility(View.GONE);
+                if (tvEmptyServices != null) {
+                    tvEmptyServices.setVisibility(View.VISIBLE);
+                    tvEmptyServices.setText("Нет доступных услуг");
+                }
+                if (rvServices != null) {
+                    rvServices.setVisibility(View.GONE);
+                }
             } else {
-                tvEmptyServices.setVisibility(View.GONE);
-                rvServices.setVisibility(View.VISIBLE);
-                servicesAdapter.setServices(services);
+                if (tvEmptyServices != null) {
+                    tvEmptyServices.setVisibility(View.GONE);
+                }
+                if (rvServices != null) {
+                    rvServices.setVisibility(View.VISIBLE);
+                    servicesAdapter.setServices(services);
+                }
             }
         } else if (resource instanceof Resource.Error) {
-            progressBar.setVisibility(View.GONE);
-            tvEmptyServices.setVisibility(View.VISIBLE);
-            tvEmptyServices.setText("Ошибка загрузки услуг");
+            if (progressBarServices != null) {
+                progressBarServices.setVisibility(View.GONE);
+            }
+            if (tvEmptyServices != null) {
+                tvEmptyServices.setVisibility(View.VISIBLE);
+                tvEmptyServices.setText("Ошибка загрузки услуг");
+            }
+            if (rvServices != null) {
+                rvServices.setVisibility(View.GONE);
+            }
         }
     }
 
     private void setupClickListeners() {
         cardAddress.setOnClickListener(v -> {
-            // Показать адрес на карте
             Toast.makeText(getContext(), "г. Москва, ул. Примерная, д. 123", Toast.LENGTH_SHORT).show();
         });
 
@@ -184,7 +247,7 @@ public class HomeFragment extends Fragment {
     private String getUserName() {
         try {
             TokenManager tokenManager = new TokenManager(requireContext());
-            // Пока заглушка, позже можно получить из профиля
+            // TODO: получить имя из профиля
             return "Гость";
         } catch (Exception e) {
             return "Гость";
@@ -207,7 +270,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void navigateToBooking(Service service) {
-        // Переход на фрагмент записи с выбранной услугой
         Bundle args = new Bundle();
         args.putLong("selected_service_id", service.getId());
         args.putString("selected_service_name", service.getName());
@@ -217,23 +279,12 @@ public class HomeFragment extends Fragment {
                 .navigate(R.id.action_home_to_booking, args);
     }
 
-    // Внутренний класс для слайдера
-    private static class SliderItem {
-        int imageRes;
-        String title;
-
-        SliderItem(int imageRes, String title) {
-            this.imageRes = imageRes;
-            this.title = title;
-        }
-
-        public int getImageRes() { return imageRes; }
-        public String getTitle() { return title; }
-    }
+    // ========== АДАПТЕР ДЛЯ СЛАЙДЕРА (РАБОТАЕТ С URL) ==========
 
     private static class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderViewHolder> {
 
-        private List<SliderItem> items;
+        private final List<SliderItem> items;
+        private final String baseUrl = "http://192.168.0.111:8080";
 
         SliderAdapter(List<SliderItem> items) {
             this.items = items;
@@ -250,8 +301,17 @@ public class HomeFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull SliderViewHolder holder, int position) {
             SliderItem item = items.get(position);
-            holder.imageView.setImageResource(item.getImageRes());
-            holder.textView.setText(item.getTitle());
+
+            holder.tvTitle.setText(item.getTitle());
+            holder.tvDescription.setText(item.getDescription());
+
+            String fullUrl = baseUrl + item.getImageUrl();
+
+            Glide.with(holder.itemView.getContext())
+                    .load(fullUrl)
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .into(holder.imageView);
         }
 
         @Override
@@ -261,12 +321,14 @@ public class HomeFragment extends Fragment {
 
         static class SliderViewHolder extends RecyclerView.ViewHolder {
             ImageView imageView;
-            TextView textView;
+            TextView tvTitle;
+            TextView tvDescription;
 
             SliderViewHolder(@NonNull View itemView) {
                 super(itemView);
                 imageView = itemView.findViewById(R.id.ivSliderImage);
-                textView = itemView.findViewById(R.id.tvSliderTitle);
+                tvTitle = itemView.findViewById(R.id.tvSliderTitle);
+                tvDescription = itemView.findViewById(R.id.tvSliderDescription);
             }
         }
     }

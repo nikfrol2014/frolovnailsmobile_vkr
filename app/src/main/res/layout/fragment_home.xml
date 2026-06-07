@@ -21,11 +21,11 @@
             android:textColor="@color/text_primary"
             android:layout_marginBottom="16dp" />
 
-        <!-- Слайдер акций -->
+        <!-- Слайдер -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🔥 Акции и новости"
+            android:text="🔥 Прайс лист"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -33,20 +33,20 @@
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginBottom="24dp"
+            android:layout_height="380dp"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp">
 
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/viewPagerSlider"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="400dp" />
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayoutSlider"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="5pt"
                 android:layout_gravity="bottom"
                 app:tabBackground="@drawable/tab_indicator"
                 app:tabGravity="center"
@@ -54,7 +54,15 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Популярные услуги -->
+        <!-- Прогресс для слайдера -->
+        <ProgressBar
+            android:id="@+id/progressBarSlider"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!-- Услуги -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -62,8 +70,10 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp" />
 
+        <!-- Прогресс для услуг - ВАЖНО: ID = progressBar -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
@@ -90,7 +100,7 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_marginBottom="24dp" />
 
-        <!-- Информация о студии -->
+        <!-- О студии -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
