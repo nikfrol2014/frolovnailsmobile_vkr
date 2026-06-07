@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Основные цвета (немного ярче для темной темы) -->
+    <color name="primary">#66BB6A</color>
+    <color name="primary_dark">#43A047</color>
+    <color name="secondary">#FFB74D</color>
+    <color name="secondary_dark">#FFA726</color>
+    <color name="accent">#42A5F5</color>
+
+    <!-- Фоны -->
+    <color name="background">#121212</color>
+    <color name="surface">#1E1E1E</color>
+    <color name="surface_variant">#2C2C2C</color>
+
+    <!-- Текст -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_disabled">#6B6B6B</color>
+
+    <!-- Статусы записей -->
+    <color name="status_confirmed">#81C784</color>
+    <color name="status_pending">#FFB74D</color>
+    <color name="status_cancelled">#E57373</color>
+    <color name="status_completed">#64B5F6</color>
+    <color name="status_created">#FFB74D</color>
+
+    <!-- Разное -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="divider">#2C2C2C</color>
+</resources>

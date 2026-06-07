@@ -11,7 +11,9 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
+import com.example.frolovnails.R;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.ScheduleBlock;
 
@@ -76,17 +78,21 @@ public class SimpleTimelineView extends View {
         init();
     }
 
+    // Вместо статических цветов, используем getResources().getColor()
+
     private void init() {
         float density = getResources().getDisplayMetrics().density;
         hourHeight = HOUR_HEIGHT_DP * density;
         leftMargin = LEFT_MARGIN_DP * density;
 
+        Context context = getContext();
+
         gridPaint = new Paint();
-        gridPaint.setColor(Color.parseColor("#E0E0E0"));
+        gridPaint.setColor(getColor(context, R.color.divider));
         gridPaint.setStrokeWidth(1f);
 
         textPaint = new Paint();
-        textPaint.setColor(Color.parseColor("#757575"));
+        textPaint.setColor(getColor(context, R.color.text_secondary));
         textPaint.setTextSize(12 * density);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
@@ -94,18 +100,23 @@ public class SimpleTimelineView extends View {
         eventPaint.setStyle(Paint.Style.FILL);
 
         currentTimePaint = new Paint();
-        currentTimePaint.setColor(Color.RED);
+        currentTimePaint.setColor(getColor(context, R.color.status_cancelled));
         currentTimePaint.setStrokeWidth(2f);
 
         blockPaint = new Paint();
-        blockPaint.setColor(Color.parseColor("#AAFF4444"));
+        blockPaint.setColor(ContextCompat.getColor(context, R.color.status_cancelled));
+        blockPaint.setAlpha(100);
         blockPaint.setStyle(Paint.Style.FILL);
 
         blockTextPaint = new Paint();
-        blockTextPaint.setColor(Color.WHITE);
+        blockTextPaint.setColor(getColor(context, R.color.white));
         blockTextPaint.setTextSize(12 * density);
 
         startCurrentTimeUpdater();
+    }
+
+    private int getColor(Context context, int colorRes) {
+        return ContextCompat.getColor(context, colorRes);
     }
 
     private void startCurrentTimeUpdater() {
@@ -377,24 +388,27 @@ public class SimpleTimelineView extends View {
     }
 
     private int getBackgroundColorForStatus(String status) {
+        Context context = getContext();
         switch (status) {
-            case "CONFIRMED": return Color.parseColor("#4CAF50");
-            case "PENDING": return Color.parseColor("#FF9800");
-            case "CREATED": return Color.parseColor("#FF9800");
-            case "CANCELLED": return Color.parseColor("#F44336");
-            case "COMPLETED": return Color.parseColor("#2196F3");
-            default: return Color.parseColor("#9E9E9E");
+            case "CONFIRMED": return ContextCompat.getColor(context, R.color.status_confirmed);
+            case "PENDING": return ContextCompat.getColor(context, R.color.status_pending);
+            case "CREATED": return ContextCompat.getColor(context, R.color.status_created);
+            case "CANCELLED": return ContextCompat.getColor(context, R.color.status_cancelled);
+            case "COMPLETED": return ContextCompat.getColor(context, R.color.status_completed);
+            default: return ContextCompat.getColor(context, R.color.text_disabled);
         }
     }
 
     private int getBorderColorForStatus(String status) {
+        // Более темный оттенок для рамки
+        Context context = getContext();
         switch (status) {
-            case "CONFIRMED": return Color.parseColor("#2E7D32");
-            case "PENDING": return Color.parseColor("#E65100");
-            case "CREATED": return Color.parseColor("#E65100");
-            case "CANCELLED": return Color.parseColor("#B71C1C");
-            case "COMPLETED": return Color.parseColor("#0D47A1");
-            default: return Color.parseColor("#757575");
+            case "CONFIRMED": return ContextCompat.getColor(context, R.color.primary_dark);
+            case "PENDING": return ContextCompat.getColor(context, R.color.secondary_dark);
+            case "CREATED": return ContextCompat.getColor(context, R.color.secondary_dark);
+            case "CANCELLED": return ContextCompat.getColor(context, R.color.status_cancelled);
+            case "COMPLETED": return ContextCompat.getColor(context, R.color.accent);
+            default: return ContextCompat.getColor(context, R.color.text_disabled);
         }
     }
 
