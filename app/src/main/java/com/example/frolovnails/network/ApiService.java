@@ -232,4 +232,8 @@ public interface ApiService {
 
     @GET("/api/content/slider")
     Call<ApiResponse<List<SliderItem>>> getSliderItems();
+
+    // ========== FCM TOKEN ==========
+    @POST("/api/auth/fcm-token")
+    Call<ApiResponse<Void>> saveFcmToken(@Body Map<String, String> token);
 }

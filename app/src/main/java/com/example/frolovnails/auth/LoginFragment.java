@@ -1,5 +1,6 @@
 package com.example.frolovnails.auth;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,14 +19,22 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.example.frolovnails.R;
-import com.example.frolovnails.common.Resource;
-import com.example.frolovnails.common.TokenManager;
-
-
-import android.content.Intent;
 import com.example.frolovnails.admin.AdminMainActivity;
 import com.example.frolovnails.client.ClientMainActivity;
+import com.example.frolovnails.common.Resource;
+import com.example.frolovnails.common.TokenManager;
+import com.example.frolovnails.network.ApiClient;
+import com.example.frolovnails.network.ApiService;
+import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.AuthResponse;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginFragment extends Fragment {
 
@@ -95,7 +104,6 @@ public class LoginFragment extends Fragment {
                         response.getRefreshToken(),
                         response.getRole()
                 );
-                // Проверяем, что сохранилось
                 String savedToken = tokenManager.getAccessToken();
                 Log.d("AUTH", "Saved token (first 20 chars): " + (savedToken != null ? savedToken.substring(0, Math.min(20, savedToken.length())) : "null"));
                 Log.d("AUTH", "Saved role: " + tokenManager.getRole());
@@ -103,14 +111,17 @@ public class LoginFragment extends Fragment {
                 Log.e("AUTH", "Error saving tokens: " + e.getMessage());
             }
 
+            // ========== СОХРАНЯЕМ FCM ТОКЕН ==========
+            saveFcmToken();
+
             Toast.makeText(getContext(), "Вход выполнен! Роль: " + response.getRole(), Toast.LENGTH_LONG).show();
 
             // Перенаправление в зависимости от роли
             Intent intent;
             if ("ADMIN".equals(response.getRole())) {
-                intent = new Intent(getContext(), com.example.frolovnails.admin.AdminMainActivity.class);
+                intent = new Intent(getContext(), AdminMainActivity.class);
             } else {
-                intent = new Intent(getContext(), com.example.frolovnails.client.ClientMainActivity.class);
+                intent = new Intent(getContext(), ClientMainActivity.class);
             }
             startActivity(intent);
             requireActivity().finish();
@@ -121,5 +132,44 @@ public class LoginFragment extends Fragment {
             String error = ((Resource.Error<AuthResponse>) resource).getMessage();
             Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void saveFcmToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        String token = task.getResult();
+                        Log.d("FCM", "Saving token to server: " + token);
+
+                        try {
+                            TokenManager tokenManager = new TokenManager(requireContext());
+                            ApiService apiService = ApiClient.getClient(tokenManager).create(ApiService.class);
+
+                            Map<String, String> request = new HashMap<>();
+                            request.put("token", token);
+
+                            apiService.saveFcmToken(request).enqueue(new Callback<ApiResponse<Void>>() {
+                                @Override
+                                public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                                        Log.d("FCM", "✅ FCM token saved on server");
+                                    } else {
+                                        String msg = response.body() != null ? response.body().getMessage() : "Unknown error";
+                                        Log.e("FCM", "Failed to save token: " + msg);
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                                    Log.e("FCM", "Error saving token: " + t.getMessage());
+                                }
+                            });
+                        } catch (Exception e) {
+                            Log.e("FCM", "Error creating TokenManager: " + e.getMessage());
+                        }
+                    } else {
+                        Log.e("FCM", "Failed to get FCM token");
+                    }
+                });
     }
 }

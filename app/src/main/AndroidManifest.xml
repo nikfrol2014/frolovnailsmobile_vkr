@@ -12,19 +12,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FrolovNails"
-        android:networkSecurityConfig="@xml/network_security_config"
-        >
+        android:networkSecurityConfig="@xml/network_security_config">
+
         <activity
             android:name=".client.ClientMainActivity"
             android:exported="false"/>
-
         <activity android:name=".admin.AdminMainActivity" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -33,6 +32,20 @@
             android:name=".client.FullscreenImageActivity"
             android:theme="@style/Theme.FrolovNails"
             android:configChanges="orientation|screenSize" />
+
+        <!-- ========== FIREBASE NOTIFICATIONS ========== -->
+        <service
+            android:name=".notifications.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".notifications.NotificationActionReceiver"
+            android:exported="false" />
+
     </application>
 
 </manifest>

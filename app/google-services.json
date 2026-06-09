@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "566405654196",
+    "project_id": "frolovnails",
+    "storage_bucket": "frolovnails.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566405654196:android:b230918b126daf355599e1",
+        "android_client_info": {
+          "package_name": "com.example.frolovnails"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChxuEpDXyTO5NNNokpIJiWhQ4dk_VYWXs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
