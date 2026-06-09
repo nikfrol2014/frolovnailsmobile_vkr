@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +19,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.frolovnails.R;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
+import com.example.frolovnails.network.models.request.UpdateAppointmentStatusRequest;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.google.android.material.tabs.TabLayout;
 
@@ -61,6 +61,7 @@ public class MyAppointmentsFragment extends Fragment {
         initViewModel();
         setupTabLayout();
         setupSwipeRefresh();
+        setupAdapter();
         loadAppointments();
     }
 
@@ -74,9 +75,6 @@ public class MyAppointmentsFragment extends Fragment {
         rvAppointments.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new MyAppointmentsAdapter();
         rvAppointments.setAdapter(adapter);
-
-        adapter.setOnCancelClickListener(this::showCancelConfirmationDialog);
-        adapter.setOnItemClickListener(this::showAppointmentDetailsDialog);
     }
 
     private void initViewModel() {
@@ -95,7 +93,7 @@ public class MyAppointmentsFragment extends Fragment {
         }
 
         viewModel.getAppointmentsResult().observe(getViewLifecycleOwner(), this::handleAppointmentsResult);
-        viewModel.getCancelResult().observe(getViewLifecycleOwner(), this::handleCancelResult);
+        viewModel.getUpdateStatusResult().observe(getViewLifecycleOwner(), this::handleUpdateStatusResult);
     }
 
     private void setupTabLayout() {
@@ -126,6 +124,23 @@ public class MyAppointmentsFragment extends Fragment {
                 getResources().getColor(R.color.primary, null),
                 getResources().getColor(R.color.secondary, null)
         );
+    }
+
+    private void setupAdapter() {
+        // Подтверждение записи
+        adapter.setOnConfirmClickListener(appointment -> {
+            showConfirmDialog(appointment);
+        });
+
+        // Отмена записи
+        adapter.setOnCancelClickListener(appointment -> {
+            showCancelDialog(appointment);
+        });
+
+        // Детали записи
+        adapter.setOnItemClickListener(appointment -> {
+            showAppointmentDetailsDialog(appointment);
+        });
     }
 
     private void loadAppointments() {
@@ -159,46 +174,33 @@ public class MyAppointmentsFragment extends Fragment {
     private void filterAppointments() {
         List<Appointment> allAppointments = viewModel.getAppointmentsList();
         if (allAppointments == null || allAppointments.isEmpty()) {
-            android.util.Log.d("MyAppointments", "Список пуст");
             showEmptyState();
             return;
         }
-
-        android.util.Log.d("MyAppointments", "Всего записей: " + allAppointments.size());
 
         List<Appointment> filtered = new ArrayList<>();
         Calendar now = Calendar.getInstance();
 
         for (Appointment apt : allAppointments) {
             boolean isUpcoming = isAppointmentUpcoming(apt, now);
-            android.util.Log.d("MyAppointments",
-                    "Запись: " + apt.getStartTime() +
-                            ", статус: " + apt.getStatus() +
-                            ", предстоящая: " + isUpcoming);
+            Appointment.AppointmentStatus status = apt.getStatus();
 
             switch (currentTab) {
                 case 0: // Предстоящие
-                    if (isUpcoming && apt.getStatus() != Appointment.AppointmentStatus.CANCELLED) {
+                    if (isUpcoming && status != Appointment.AppointmentStatus.CANCELLED) {
                         filtered.add(apt);
-                        android.util.Log.d("MyAppointments", "  -> добавлена в ПРЕДСТОЯЩИЕ");
                     }
                     break;
-
                 case 1: // Прошедшие
-                    if (!isUpcoming || apt.getStatus() == Appointment.AppointmentStatus.CANCELLED) {
+                    if (!isUpcoming || status == Appointment.AppointmentStatus.CANCELLED) {
                         filtered.add(apt);
-                        android.util.Log.d("MyAppointments", "  -> добавлена в ПРОШЕДШИЕ");
                     }
                     break;
-
                 case 2: // Все
                     filtered.add(apt);
-                    android.util.Log.d("MyAppointments", "  -> добавлена во ВСЕ");
                     break;
             }
         }
-
-        android.util.Log.d("MyAppointments", "Отфильтровано: " + filtered.size() + " записей");
 
         if (filtered.isEmpty()) {
             showEmptyState();
@@ -210,17 +212,12 @@ public class MyAppointmentsFragment extends Fragment {
 
     private boolean isAppointmentUpcoming(Appointment apt, Calendar now) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
             Calendar aptTime = Calendar.getInstance();
-            aptTime.setTime(sdf.parse(apt.getStartTime()));
-            android.util.Log.d("MyAppointments", "Парсим дату: " + apt.getStartTime());
-
-            // Сравниваем без учета секунд
+            aptTime.setTime(dateFormat.parse(apt.getStartTime()));
             now.set(Calendar.SECOND, 0);
             now.set(Calendar.MILLISECOND, 0);
             aptTime.set(Calendar.SECOND, 0);
             aptTime.set(Calendar.MILLISECOND, 0);
-
             return aptTime.after(now);
         } catch (ParseException e) {
             e.printStackTrace();
@@ -250,27 +247,49 @@ public class MyAppointmentsFragment extends Fragment {
         rvAppointments.setVisibility(View.VISIBLE);
     }
 
-    private void showCancelConfirmationDialog(Appointment appointment) {
+    // ========== ДИАЛОГИ ДЕЙСТВИЙ ==========
+
+    private void showConfirmDialog(Appointment appointment) {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Подтверждение записи")
+                .setMessage("Вы подтверждаете запись?\n\n" +
+                        "💅 Услуга: " + appointment.getService().getName() + "\n" +
+                        "⏰ Время: " + appointment.getStartTime() + "\n" +
+                        "💰 Цена: " + appointment.getService().getPrice() + " ₽")
+                .setPositiveButton("Подтвердить", (dialog, which) -> {
+                    UpdateAppointmentStatusRequest request = new UpdateAppointmentStatusRequest();
+                    request.setStatus("CONFIRMED");
+                    viewModel.updateAppointmentStatus(appointment.getId(), request);
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+
+    private void showCancelDialog(Appointment appointment) {
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Отмена записи")
                 .setMessage("Вы уверены, что хотите отменить запись?\n\n" +
                         "💅 Услуга: " + appointment.getService().getName() + "\n" +
                         "⏰ Время: " + appointment.getStartTime())
                 .setPositiveButton("Отменить", (dialog, which) -> {
-                    viewModel.cancelAppointment(appointment.getId());
+                    UpdateAppointmentStatusRequest request = new UpdateAppointmentStatusRequest();
+                    request.setStatus("CANCELLED");
+                    viewModel.updateAppointmentStatus(appointment.getId(), request);
                 })
                 .setNegativeButton("Нет", null)
                 .show();
     }
 
-    private void handleCancelResult(Resource<Void> resource) {
+    private void handleUpdateStatusResult(Resource<Appointment> resource) {
         if (resource instanceof Resource.Loading) {
-            // Показываем индикатор
+            progressBar.setVisibility(View.VISIBLE);
         } else if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "✅ Запись отменена", Toast.LENGTH_SHORT).show();
-            loadAppointments(); // Обновляем список
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "✅ Статус записи обновлен", Toast.LENGTH_SHORT).show();
+            loadAppointments();
         } else if (resource instanceof Resource.Error) {
-            String error = ((Resource.Error<Void>) resource).getMessage();
+            progressBar.setVisibility(View.GONE);
+            String error = ((Resource.Error<Appointment>) resource).getMessage();
             Toast.makeText(getContext(), "❌ Ошибка: " + error, Toast.LENGTH_SHORT).show();
         }
     }
@@ -283,20 +302,15 @@ public class MyAppointmentsFragment extends Fragment {
             priceText += " (было " + appointment.getService().getPrice() + " ₽)";
         }
 
-        String clientNotesText = "";
-        if (appointment.getClientNotes() != null && !appointment.getClientNotes().isEmpty()) {
-            clientNotesText = "\n✏️ Ваши пожелания: " + appointment.getClientNotes();
-        }
-
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Детали записи")
                 .setMessage(
                         "💅 Услуга: " + appointment.getService().getName() + "\n" +
-                                "📅 Дата: " + appointment.getStartTime() + "\n" +
+                                "📅 Дата и время: " + appointment.getStartTime() + "\n" +
                                 "💰 Цена: " + priceText + "\n" +
                                 "📊 Статус: " + getStatusText(appointment.getStatus()) + "\n" +
-                                (appointment.getMasterNotes() != null ? "📝 Заметки мастера: " + appointment.getMasterNotes() : "") +
-                                clientNotesText
+                                (appointment.getMasterNotes() != null ? "📝 Заметки мастера: " + appointment.getMasterNotes() : "") + "\n" +
+                                (appointment.getClientNotes() != null ? "✏️ Ваши пожелания: " + appointment.getClientNotes() : "")
                 )
                 .setPositiveButton("Закрыть", null)
                 .show();

@@ -44,6 +44,12 @@ public interface ApiService {
 
     // ========== Записи (клиент) ==========
 
+    @PATCH("/api/appointments/client/{id}/status")
+    Call<ApiResponse<Appointment>> updateClientAppointmentStatus(
+            @Path("id") Long id,
+            @Body UpdateAppointmentStatusRequest request
+    );
+
     @GET("/api/appointments/my/filtered")
     Call<ApiResponse<Map<String, Object>>> getMyAppointmentsFiltered(
             @Query("status") String status,

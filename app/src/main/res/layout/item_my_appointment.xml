@@ -30,7 +30,6 @@
             android:textSize="12sp"
             android:textColor="@color/text_secondary" />
 
-        <!-- ДОБАВИТЬ - заметки клиента -->
         <TextView
             android:id="@+id/tvClientNotes"
             android:layout_width="match_parent"
@@ -60,25 +59,55 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="@color/status_completed" />
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Кнопки действий для статуса CREATED/PENDING -->
+        <LinearLayout
+            android:id="@+id/llActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/btnConfirm"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="Подтвердить"
+                android:textSize="12sp"
+                android:backgroundTint="@color/success"
+                android:textColor="@android:color/white" />
 
             <Button
                 android:id="@+id/btnCancel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
                 android:text="Отменить"
                 android:textSize="12sp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:textColor="@color/error"
-                android:visibility="gone" />
+                android:backgroundTint="@color/error"
+                android:textColor="@android:color/white" />
 
         </LinearLayout>
+
+        <!-- Кнопка отмены для подтвержденных записей -->
+        <Button
+            android:id="@+id/btnCancelOnly"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:text="Отменить"
+            android:textSize="12sp"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:textColor="@color/error"
+            android:visibility="gone" />
 
     </LinearLayout>
 
