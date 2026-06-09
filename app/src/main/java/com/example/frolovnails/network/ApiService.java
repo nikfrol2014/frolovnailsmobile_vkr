@@ -34,7 +34,7 @@ public interface ApiService {
 
     // ========== Расписание (клиент) ==========
     @GET("/api/schedule/available-days")
-    Call<ApiResponse<List<AvailableDay>>> getAvailableDays(@Query("daysCount") int daysCount);
+    Call<ApiResponse<AvailableDaysResponse>> getAvailableDays(@Query("daysCount") int daysCount);
 
     @GET("/api/schedule/availability")
     Call<ApiResponse<AvailableSlotsResponse>> getAvailableSlots(

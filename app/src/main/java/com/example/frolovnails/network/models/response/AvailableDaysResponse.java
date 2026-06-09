@@ -1,16 +1,26 @@
 package com.example.frolovnails.network.models.response;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class AvailableDaysResponse {
-    private List<AvailableDay> days;
-    private Integer count;
+public class AvailableDaysResponse implements Serializable {
+    private int daysCount;
+    private int count;
+    private List<AvailableDay> availableDays;
 
     public AvailableDaysResponse() {}
 
-    public List<AvailableDay> getDays() { return days; }
-    public void setDays(List<AvailableDay> days) { this.days = days; }
+    public int getDaysCount() { return daysCount; }
+    public void setDaysCount(int daysCount) { this.daysCount = daysCount; }
 
-    public Integer getCount() { return count; }
-    public void setCount(Integer count) { this.count = count; }
+    public int getCount() { return count; }
+    public void setCount(int count) { this.count = count; }
+
+    public List<AvailableDay> getAvailableDays() { return availableDays; }
+    public void setAvailableDays(List<AvailableDay> availableDays) { this.availableDays = availableDays; }
+
+    public List<AvailableDay> getDays(){
+        return availableDays;
+    }
+    public void setDays(List<AvailableDay> availableDays) { this.availableDays = availableDays; }
 }

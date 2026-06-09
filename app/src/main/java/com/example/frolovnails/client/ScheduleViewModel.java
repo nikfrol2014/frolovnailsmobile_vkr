@@ -10,22 +10,20 @@ import com.example.frolovnails.network.ApiClient;
 import com.example.frolovnails.network.ApiService;
 import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.AvailableDay;
+import com.example.frolovnails.network.models.response.AvailableDaysResponse;
 import com.example.frolovnails.network.models.response.AvailableSlotsResponse;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/**
- * ViewModel для клиентской части - работа с расписанием
- */
 public class ScheduleViewModel extends ViewModel {
 
     private final ApiService apiService;
-
-    // Результаты
     private final MutableLiveData<Resource<List<AvailableDay>>> availableDaysResult = new MutableLiveData<>();
     private final MutableLiveData<Resource<AvailableSlotsResponse>> availableSlotsResult = new MutableLiveData<>();
 
@@ -33,7 +31,6 @@ public class ScheduleViewModel extends ViewModel {
         this.apiService = ApiClient.getClient(tokenManager).create(ApiService.class);
     }
 
-    // Геттеры для LiveData
     public LiveData<Resource<List<AvailableDay>>> getAvailableDaysResult() {
         return availableDaysResult;
     }
@@ -42,38 +39,72 @@ public class ScheduleViewModel extends ViewModel {
         return availableSlotsResult;
     }
 
-    /**
-     * Загрузить доступные дни для записи
-     * @param daysCount количество дней для просмотра
-     */
-    public void loadAvailableDays(int daysCount) {
+    // Новый метод: загружает дни и проверяет наличие слотов для каждого
+    public void loadAvailableDaysWithSlots(Long serviceId, int daysCount) {
+        android.util.Log.d("ScheduleViewModel", "loadAvailableDaysWithSlots, serviceId: " + serviceId);
         availableDaysResult.setValue(Resource.Loading.getInstance());
 
-        apiService.getAvailableDays(daysCount).enqueue(new Callback<ApiResponse<List<AvailableDay>>>() {
+        apiService.getAvailableDays(daysCount).enqueue(new Callback<ApiResponse<AvailableDaysResponse>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<AvailableDay>>> call,
-                                   Response<ApiResponse<List<AvailableDay>>> response) {
+            public void onResponse(Call<ApiResponse<AvailableDaysResponse>> call,
+                                   Response<ApiResponse<AvailableDaysResponse>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    List<AvailableDay> data = response.body().getData();
-                    availableDaysResult.setValue(new Resource.Success<>(data));
+                    AvailableDaysResponse data = response.body().getData();
+                    if (data != null && data.getAvailableDays() != null && !data.getAvailableDays().isEmpty()) {
+                        checkSlotsForDays(data.getAvailableDays(), serviceId);
+                    } else {
+                        availableDaysResult.setValue(new Resource.Error<>("Нет доступных дней"));
+                    }
                 } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки доступных дней";
+                    String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки";
                     availableDaysResult.setValue(new Resource.Error<>(msg));
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<List<AvailableDay>>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<AvailableDaysResponse>> call, Throwable t) {
                 availableDaysResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
             }
         });
     }
 
-    /**
-     * Загрузить доступные слоты для выбранной даты и услуги
-     * @param date дата в формате dd.MM.yyyy
-     * @param serviceId ID услуги
-     */
+    private void checkSlotsForDays(List<AvailableDay> days, Long serviceId) {
+        List<AvailableDay> daysWithSlots = new ArrayList<>();
+        checkNextDay(days, 0, serviceId, daysWithSlots);
+    }
+
+    private void checkNextDay(List<AvailableDay> days, int index, Long serviceId, List<AvailableDay> daysWithSlots) {
+        if (index >= days.size()) {
+            if (daysWithSlots.isEmpty()) {
+                availableDaysResult.setValue(new Resource.Error<>("Нет дней со свободными слотами"));
+            } else {
+                availableDaysResult.setValue(new Resource.Success<>(daysWithSlots));
+            }
+            return;
+        }
+
+        AvailableDay day = days.get(index);
+        apiService.getAvailableSlots(day.getAvailableDate(), serviceId).enqueue(new Callback<ApiResponse<AvailableSlotsResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<AvailableSlotsResponse>> call,
+                                   Response<ApiResponse<AvailableSlotsResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    AvailableSlotsResponse slots = response.body().getData();
+                    if (slots != null && slots.getAvailableSlots() != null && !slots.getAvailableSlots().isEmpty()) {
+                        daysWithSlots.add(day);
+                    }
+                }
+                checkNextDay(days, index + 1, serviceId, daysWithSlots);
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<AvailableSlotsResponse>> call, Throwable t) {
+                checkNextDay(days, index + 1, serviceId, daysWithSlots);
+            }
+        });
+    }
+
+    // Обычная загрузка слотов для выбранной даты
     public void loadAvailableSlots(String date, Long serviceId) {
         availableSlotsResult.setValue(Resource.Loading.getInstance());
 
@@ -83,17 +114,7 @@ public class ScheduleViewModel extends ViewModel {
                                    Response<ApiResponse<AvailableSlotsResponse>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     AvailableSlotsResponse data = response.body().getData();
-
-                    // Логируем полученные слоты для отладки
-                    android.util.Log.d("ScheduleViewModel", "Получены слоты: " +
-                            (data != null && data.getAvailableSlots() != null ?
-                                    data.getAvailableSlots().size() : 0));
-
-                    if (data != null && data.getAvailableSlots() != null && !data.getAvailableSlots().isEmpty()) {
-                        availableSlotsResult.setValue(new Resource.Success<>(data));
-                    } else {
-                        availableSlotsResult.setValue(new Resource.Error<>("Нет доступного времени на выбранную дату"));
-                    }
+                    availableSlotsResult.setValue(new Resource.Success<>(data));
                 } else {
                     String msg = response.body() != null ? response.body().getMessage() : "Ошибка загрузки слотов";
                     availableSlotsResult.setValue(new Resource.Error<>(msg));

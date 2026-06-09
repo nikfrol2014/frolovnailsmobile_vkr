@@ -20,16 +20,17 @@
             android:textColor="@color/text_primary"
             android:layout_marginBottom="24dp" />
 
-        <!-- Шаг 1: Выбор услуги -->
+        <!-- Шаг 1: Категории -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardServiceSelection"
+            android:id="@+id/cardCategorySelection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             style="@style/CardViewStyle"
             android:clickable="true"
             android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
+            android:foreground="?attr/selectableItemBackground"
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -46,7 +47,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="1. Выберите услугу"
+                        android:text="1. Выберите категорию"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
@@ -55,7 +56,69 @@
                         android:id="@+id/tvStep1Status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="⬜ Не выбран"
+                        android:text="⬜ Не выбрана"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_hint" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvSelectedCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingBottom="16dp"
+                    android:text="Не выбрана"
+                    android:textColor="@color/text_secondary" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCategories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <!-- Шаг 2: Услуги -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardServiceSelection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            style="@style/CardViewStyle"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="2. Выберите услугу"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvStep2Status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⬜ Не выбрана"
                         android:textSize="12sp"
                         android:textColor="@color/text_hint" />
 
@@ -67,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="16dp"
                     android:paddingBottom="16dp"
-                    android:text="Не выбрано"
+                    android:text="Не выбрана"
                     android:textColor="@color/text_secondary" />
 
             </LinearLayout>
@@ -81,7 +144,7 @@
             android:layout_marginBottom="16dp"
             android:visibility="gone" />
 
-        <!-- Шаг 2: Выбор даты -->
+        <!-- Шаг 3: Дата -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardDateSelection"
             android:layout_width="match_parent"
@@ -108,13 +171,13 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="2. Выберите дату"
+                        android:text="3. Выберите дату"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
                     <TextView
-                        android:id="@+id/tvStep2Status"
+                        android:id="@+id/tvStep3Status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="⬜ Не выбрана"
@@ -141,9 +204,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:visibility="gone" />
 
-        <!-- Шаг 3: Выбор времени -->
+        <!-- Шаг 4: Время -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardTimeSelection"
             android:layout_width="match_parent"
@@ -167,13 +232,13 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="3. Выберите время"
+                        android:text="4. Выберите время"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
                     <TextView
-                        android:id="@+id/tvStep3Status"
+                        android:id="@+id/tvStep4Status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="⬜ Не выбрано"
@@ -191,9 +256,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:nestedScrollingEnabled="false"
             android:visibility="gone" />
 
-        <!-- Шаг 4: Заметки -->
+        <!-- Шаг 5: Заметки -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardNotes"
             android:layout_width="match_parent"
@@ -211,7 +277,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="4. Пожелания к мастеру"
+                    android:text="5. Пожелания к мастеру"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -226,7 +292,7 @@
                         android:id="@+id/etNotes"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Например: хочу дизайн с блестками, не люблю гель-лак и т.д."
+                        android:hint="Например: хочу дизайн с блестками..."
                         android:inputType="textMultiLine"
                         android:minLines="3"
                         android:maxLines="5" />
@@ -242,7 +308,7 @@
             android:id="@+id/btnConfirmBooking"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="✅ Подтвердить запись"
+            android:text="✅ Записаться"
             android:visibility="gone" />
 
         <ProgressBar
