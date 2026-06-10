@@ -24,8 +24,10 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.bumptech.glide.Glide;
 import com.example.frolovnails.R;
 import com.example.frolovnails.adapters.ServicesAdapter;
+import com.example.frolovnails.admin.ProfileViewModel;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
+import com.example.frolovnails.network.models.response.ProfileResponse;
 import com.example.frolovnails.network.models.response.Service;
 import com.example.frolovnails.network.models.response.SliderItem;
 import com.google.android.material.card.MaterialCardView;
@@ -41,6 +43,7 @@ public class HomeFragment extends Fragment {
 
     // Приветствие
     private TextView tvGreeting;
+    private ProfileViewModel profileViewModel;
 
     // Слайдер
     private ViewPager2 viewPagerSlider;
@@ -76,11 +79,35 @@ public class HomeFragment extends Fragment {
 
         initViews(view);
         initViewModels();
+        initProfileViewModel();
         loadSliderFromServer();
         loadServices();
         setupClickListeners();
         setGreeting();
     }
+
+    private void initProfileViewModel() {
+        try {
+            TokenManager tokenManager = new TokenManager(requireContext());
+            profileViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+                @NonNull
+                @Override
+                public <T extends androidx.lifecycle.ViewModel> T create(@NonNull Class<T> modelClass) {
+                    return (T) new ProfileViewModel(tokenManager);
+                }
+            }).get(ProfileViewModel.class);
+
+            profileViewModel.loadProfile();
+            profileViewModel.getProfileResult().observe(getViewLifecycleOwner(), resource -> {
+                if (resource instanceof Resource.Success) {
+                    setGreeting();  // Обновляем приветствие после загрузки профиля
+                }
+            });
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void initViews(View view) {
         tvGreeting = view.findViewById(R.id.tvGreeting);
@@ -324,15 +351,15 @@ public class HomeFragment extends Fragment {
 
     private void setupClickListeners() {
         cardAddress.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "г. Москва, ул. Примерная, д. 123", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "\uD83D\uDCCD Адрес: г. Н.Новгород, ул. Лескова, \nд.2 (вход со стороны двора)", Toast.LENGTH_SHORT).show();
         });
 
         cardWorkHours.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Пн-Пт: 10:00-20:00\nСб-Вс: 10:00-18:00", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "\uD83D\uDC64 Мастер: Алина", Toast.LENGTH_SHORT).show();
         });
 
         cardPhone.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "+7 (916) 123-45-67", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "\uD83D\uDCDE Телефон: +7 903 041 25 78", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -345,9 +372,23 @@ public class HomeFragment extends Fragment {
     private String getUserName() {
         try {
             TokenManager tokenManager = new TokenManager(requireContext());
-            // TODO: получить имя из профиля
+
+            // Если пользователь не авторизован
+            if (!tokenManager.isLoggedIn()) {
+                return "Гость";
+            }
+
+            // Получаем профиль из ViewModel
+            if (profileViewModel != null && profileViewModel.getProfileData() != null) {
+                ProfileResponse.ClientInfo client = profileViewModel.getProfileData().getClient();
+                if (client != null && client.getFirstName() != null && !client.getFirstName().isEmpty()) {
+                    return client.getFirstName();
+                }
+            }
+
             return "Гость";
         } catch (Exception e) {
+            e.printStackTrace();
             return "Гость";
         }
     }

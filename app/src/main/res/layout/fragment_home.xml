@@ -128,9 +128,9 @@
 
                 <TextView
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="130px"
                     android:layout_weight="1"
-                    android:text="📍 Адрес: г. Москва, ул. Примерная, д. 123"
+                    android:text="📍 Адрес: г. Н.Новгород, ул. Лескова, д.2\n\t\t\t(вход со стороны двора)"
                     android:textSize="14sp"
                     android:textColor="@color/text_primary" />
 
@@ -165,7 +165,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="🕐 Часы работы: Пн-Пт 10:00-20:00, Сб-Вс 10:00-18:00"
+                    android:text="👤 Мастер: Алина"
                     android:textSize="14sp"
                     android:textColor="@color/text_primary" />
 
@@ -200,7 +200,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="📞 Телефон: +7 (916) 123-45-67"
+                    android:text="📞 Телефон: +7 903 041 25 78"
                     android:textSize="14sp"
                     android:textColor="@color/text_primary" />
 
