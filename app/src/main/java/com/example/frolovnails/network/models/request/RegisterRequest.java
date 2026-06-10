@@ -10,14 +10,35 @@ public class RegisterRequest {
     private String firstName;
     private String lastName;
 
-    public RegisterRequest() {
-    }
+    private String birthDate;  // ДОБАВИТЬ
+    private String notes;      // ДОБАВИТЬ
 
-    public RegisterRequest(String phone, String password, String firstName, String lastName) {
+    public RegisterRequest(String phone, String password, String firstName, String lastName, String birthDate) {
         this.phone = phone;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.birthDate = birthDate;
+        this.notes = "Клиент зарегистрирован через приложение";
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public RegisterRequest() {
     }
 
     public String getPhone() {

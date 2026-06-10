@@ -56,10 +56,10 @@ public class AuthViewModel extends ViewModel {
         });
     }
 
-    public void register(String phone, String password, String firstName, String lastName) {
+    public void register(String phone, String password, String firstName, String lastName, String birthDate) {
         authResult.setValue(Resource.Loading.getInstance());
 
-        RegisterRequest request = new RegisterRequest(phone, password, firstName, lastName);
+        RegisterRequest request = new RegisterRequest(phone, password, firstName, lastName, birthDate);
         apiService.register(request).enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<AuthResponse>> call, Response<ApiResponse<AuthResponse>> response) {

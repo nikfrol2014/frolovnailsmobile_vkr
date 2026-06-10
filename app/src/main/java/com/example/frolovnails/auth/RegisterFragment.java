@@ -1,6 +1,8 @@
 package com.example.frolovnails.auth;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +23,9 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.network.models.response.AuthResponse;
 import com.example.frolovnails.utils.ToastUtils;
 
+import java.util.Calendar;
+import java.util.Locale;
+
 
 public class RegisterFragment extends Fragment {
 
@@ -29,6 +34,8 @@ public class RegisterFragment extends Fragment {
     private TextView tvLoginLink;
     private ProgressBar progressBar;
     private AuthViewModel authViewModel;
+    private DatePickerDialog datePickerDialog;
+    private EditText etBirthDate, etNotes;
 
     @Nullable
     @Override
@@ -50,6 +57,10 @@ public class RegisterFragment extends Fragment {
         tvLoginLink = view.findViewById(R.id.tvLoginLink);
         progressBar = view.findViewById(R.id.progressBar);
 
+        etBirthDate = view.findViewById(R.id.etBirthDate);
+        etBirthDate.setInputType(InputType.TYPE_NULL);
+        etBirthDate.setOnClickListener(v -> showDatePickerDialog());
+
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         btnRegister.setOnClickListener(v -> {
@@ -58,8 +69,9 @@ public class RegisterFragment extends Fragment {
             String phone = etPhone.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
             String confirmPassword = etConfirmPassword.getText().toString().trim();
+            String birthDate = etBirthDate.getText().toString().trim();  // ← добавить
 
-            if (firstName.isEmpty() || phone.isEmpty() || password.isEmpty()) {
+            if (firstName.isEmpty() || phone.isEmpty() || password.isEmpty() || birthDate.isEmpty()) {
                 ToastUtils.show(getContext(), "Заполните обязательные поля", Toast.LENGTH_SHORT);
                 return;
             }
@@ -69,7 +81,7 @@ public class RegisterFragment extends Fragment {
                 return;
             }
 
-            authViewModel.register(phone, password, firstName, lastName);
+            authViewModel.register(phone, password, firstName, lastName, birthDate);
         });
 
         tvLoginLink.setOnClickListener(v ->
@@ -77,6 +89,21 @@ public class RegisterFragment extends Fragment {
         );
 
         authViewModel.getAuthResult().observe(getViewLifecycleOwner(), this::handleAuthResult);
+    }
+
+    private void showDatePickerDialog() {
+        Calendar calendar = Calendar.getInstance();
+        datePickerDialog = new DatePickerDialog(getContext(),
+                (view, year, month, dayOfMonth) -> {
+                    // Формат: dd.MM.yyyy (как ожидает сервер)
+                    String selectedDate = String.format(Locale.getDefault(),
+                            "%02d.%02d.%04d", dayOfMonth, month + 1, year);
+                    etBirthDate.setText(selectedDate);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH));
+        datePickerDialog.show();
     }
 
     private void handleAuthResult(Resource<AuthResponse> resource) {
