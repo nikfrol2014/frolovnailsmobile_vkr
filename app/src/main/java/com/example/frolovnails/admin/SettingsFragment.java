@@ -20,6 +20,7 @@ import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.ProfileResponse;
 import com.example.frolovnails.ui.ChangePasswordDialog;
 import com.example.frolovnails.ui.EditProfileDialog;
+import com.example.frolovnails.utils.ToastUtils;
 import com.google.android.material.card.MaterialCardView;
 
 import java.io.IOException;
@@ -98,11 +99,11 @@ public class SettingsFragment extends Fragment {
                 EditProfileDialog dialog = EditProfileDialog.newInstance(profileViewModel.getProfileData());
                 dialog.setOnSaveListener(() -> {
                     profileViewModel.loadProfile();
-                    Toast.makeText(getContext(), "Профиль обновлен", Toast.LENGTH_SHORT).show();
+                    ToastUtils.show(getContext(), "Профиль обновлен", Toast.LENGTH_SHORT);
                 });
                 dialog.show(getChildFragmentManager(), "edit_profile");
             } else {
-                Toast.makeText(getContext(), "Загрузка данных профиля...", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Загрузка данных профиля...", Toast.LENGTH_SHORT);
             }
         });
 
@@ -110,7 +111,7 @@ public class SettingsFragment extends Fragment {
         cardChangePassword.setOnClickListener(v -> {
             ChangePasswordDialog dialog = ChangePasswordDialog.newInstance();
             dialog.setOnPasswordChangedListener(() -> {
-                Toast.makeText(getContext(), "Пароль изменен. Войдите заново.", Toast.LENGTH_LONG).show();
+                ToastUtils.show(getContext(), "Пароль изменен. Войдите заново.", Toast.LENGTH_LONG);
                 logout();
             });
             dialog.show(getChildFragmentManager(), "change_password");
@@ -133,7 +134,7 @@ public class SettingsFragment extends Fragment {
         if (tokenManager != null) {
             tokenManager.clear();
         }
-        Toast.makeText(getContext(), "Вы вышли из системы", Toast.LENGTH_SHORT).show();
+        ToastUtils.show(getContext(), "Вы вышли из системы", Toast.LENGTH_SHORT);
 
         Intent intent = new Intent(getContext(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -26,6 +26,7 @@ import com.example.frolovnails.ui.AppointmentActionDialog;
 import com.example.frolovnails.ui.ClientDetailsDialog;
 import com.example.frolovnails.ui.MasterNotesDialog;
 import com.example.frolovnails.ui.RescheduleDialog;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -198,13 +199,13 @@ public class TimelineFragment extends Fragment {
                 timelineView.setAppointments(dayAppointments);
 
                 if (dayAppointments.isEmpty()) {
-                    Toast.makeText(getContext(), "Нет записей на этот день", Toast.LENGTH_SHORT).show();
+                    ToastUtils.show(getContext(), "Нет записей на этот день", Toast.LENGTH_SHORT);
                 }
             }
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             timelineView.setVisibility(View.VISIBLE);
-            Toast.makeText(getContext(), ((Resource.Error<TimelineResponse>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<TimelineResponse>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -212,7 +213,7 @@ public class TimelineFragment extends Fragment {
 
     private void showAppointmentActionDialog(Appointment appointment) {
         if (appointment == null) {
-            Toast.makeText(getContext(), "Ошибка: запись не найдена", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Ошибка: запись не найдена", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -258,18 +259,18 @@ public class TimelineFragment extends Fragment {
     private void showRescheduleDialog(Appointment appointment) {
         String status = appointment.getStatus().toString();
         if ("CANCELLED".equals(status)) {
-            Toast.makeText(getContext(), "❌ Отменённую запись нельзя перенести", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "❌ Отменённую запись нельзя перенести", Toast.LENGTH_SHORT);
             return;
         }
         if ("COMPLETED".equals(status)) {
-            Toast.makeText(getContext(), "❌ Завершённую запись нельзя перенести", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "❌ Завершённую запись нельзя перенести", Toast.LENGTH_SHORT);
             return;
         }
 
         RescheduleDialog dialog = RescheduleDialog.newInstance(appointment);
         dialog.setOnRescheduleListener(() -> {
             loadDataForDate();
-            Toast.makeText(getContext(), "✅ Запись перенесена", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "✅ Запись перенесена", Toast.LENGTH_SHORT);
         });
         dialog.show(getChildFragmentManager(), "reschedule");
     }
@@ -279,11 +280,11 @@ public class TimelineFragment extends Fragment {
     private void showCancelConfirmationDialog(Appointment appointment) {
         String status = appointment.getStatus().toString();
         if ("CANCELLED".equals(status)) {
-            Toast.makeText(getContext(), "❌ Запись уже отменена", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "❌ Запись уже отменена", Toast.LENGTH_SHORT);
             return;
         }
         if ("COMPLETED".equals(status)) {
-            Toast.makeText(getContext(), "❌ Завершённую запись нельзя отменить", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "❌ Завершённую запись нельзя отменить", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -308,11 +309,11 @@ public class TimelineFragment extends Fragment {
     private void observeCancelResult() {
         viewModel.getUpdateStatusResult().observe(getViewLifecycleOwner(), resource -> {
             if (resource instanceof Resource.Success) {
-                Toast.makeText(getContext(), "✅ Запись отменена", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "✅ Запись отменена", Toast.LENGTH_SHORT);
                 loadDataForDate();
                 viewModel.getUpdateStatusResult().removeObservers(getViewLifecycleOwner());
             } else if (resource instanceof Resource.Error) {
-                Toast.makeText(getContext(), "❌ " + ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "❌ " + ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT);
                 viewModel.getUpdateStatusResult().removeObservers(getViewLifecycleOwner());
             }
         });
@@ -340,11 +341,11 @@ public class TimelineFragment extends Fragment {
     private void observeDeleteResult() {
         viewModel.getDeleteAppointmentResult().observe(getViewLifecycleOwner(), resource -> {
             if (resource instanceof Resource.Success) {
-                Toast.makeText(getContext(), "✅ Запись удалена", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "✅ Запись удалена", Toast.LENGTH_SHORT);
                 loadDataForDate();
                 viewModel.getDeleteAppointmentResult().removeObservers(getViewLifecycleOwner());
             } else if (resource instanceof Resource.Error) {
-                Toast.makeText(getContext(), "❌ " + ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "❌ " + ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT);
                 viewModel.getDeleteAppointmentResult().removeObservers(getViewLifecycleOwner());
             }
         });
@@ -376,11 +377,11 @@ public class TimelineFragment extends Fragment {
                     viewModel.updateAppointmentStatus(appointment.getId(), request);
                     viewModel.getUpdateStatusResult().observe(getViewLifecycleOwner(), resource -> {
                         if (resource instanceof Resource.Success) {
-                            Toast.makeText(getContext(), "✅ Статус обновлен", Toast.LENGTH_SHORT).show();
+                            ToastUtils.show(getContext(), "✅ Статус обновлен", Toast.LENGTH_SHORT);
                             loadDataForDate();
                             dialog.dismiss();
                         } else if (resource instanceof Resource.Error) {
-                            Toast.makeText(getContext(), "❌ " + ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+                            ToastUtils.show(getContext(), "❌ " + ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT);
                         }
                     });
                 })

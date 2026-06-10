@@ -22,6 +22,7 @@ import com.example.frolovnails.admin.ScheduleViewModel;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.AvailableDay;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -214,7 +215,7 @@ public class AvailableDayDialog extends DialogFragment {
         String notes = etNotes.getText().toString().trim();
 
         if (date.isEmpty() || workStart.isEmpty() || workEnd.isEmpty()) {
-            Toast.makeText(getContext(), "Заполните все поля", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Заполните все поля", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -237,12 +238,12 @@ public class AvailableDayDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "День добавлен", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "День добавлен", Toast.LENGTH_SHORT);
             dismiss();
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<AvailableDay>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<AvailableDay>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -252,12 +253,12 @@ public class AvailableDayDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "День обновлён", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "День обновлён", Toast.LENGTH_SHORT);
             dismiss();
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<AvailableDay>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<AvailableDay>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }

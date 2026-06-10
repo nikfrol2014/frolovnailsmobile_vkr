@@ -10,6 +10,7 @@ import com.example.frolovnails.network.ApiClient;
 import com.example.frolovnails.network.ApiService;
 import com.example.frolovnails.network.models.request.CreateAvailableDayRequest;
 import com.example.frolovnails.network.models.request.CreateScheduleBlockRequest;
+import com.example.frolovnails.network.models.response.AdminAvailableDaysResponse;
 import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.AvailableDay;
 import com.example.frolovnails.network.models.response.AvailableDaysResponse;
@@ -58,7 +59,7 @@ public class ScheduleViewModel extends ViewModel {
     public LiveData<Resource<Void>> getDeleteScheduleBlockResult() { return deleteScheduleBlockResult; }
 
     // Загрузить доступные дни
-    public void loadAvailableDays(int monthsCount) {
+    public void loadAvailableDaysForAdmin(int monthsCount) {
         availableDaysResult.setValue(Resource.Loading.getInstance());
 
         Calendar cal = Calendar.getInstance();
@@ -66,11 +67,12 @@ public class ScheduleViewModel extends ViewModel {
         cal.add(Calendar.MONTH, monthsCount);
         String endDate = dateFormat.format(cal.getTime());
 
-        apiService.getAvailableDaysForAdmin(startDate, endDate).enqueue(new Callback<ApiResponse<AvailableDaysResponse>>() {
+        apiService.getAvailableDaysForAdmin(startDate, endDate).enqueue(new Callback<ApiResponse<AdminAvailableDaysResponse>>() {
             @Override
-            public void onResponse(Call<ApiResponse<AvailableDaysResponse>> call, Response<ApiResponse<AvailableDaysResponse>> response) {
+            public void onResponse(Call<ApiResponse<AdminAvailableDaysResponse>> call,
+                                   Response<ApiResponse<AdminAvailableDaysResponse>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    AvailableDaysResponse data = response.body().getData();
+                    AdminAvailableDaysResponse data = response.body().getData();
                     if (data != null && data.getDays() != null) {
                         availableDaysResult.setValue(new Resource.Success<>(data.getDays()));
                     } else {
@@ -83,7 +85,7 @@ public class ScheduleViewModel extends ViewModel {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<AvailableDaysResponse>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<AdminAvailableDaysResponse>> call, Throwable t) {
                 availableDaysResult.setValue(new Resource.Error<>("Ошибка сети: " + t.getMessage()));
             }
         });

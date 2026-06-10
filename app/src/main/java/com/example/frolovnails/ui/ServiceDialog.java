@@ -21,6 +21,7 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.request.ServiceRequest;
 import com.example.frolovnails.network.models.response.Service;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -152,19 +153,19 @@ public class ServiceDialog extends DialogFragment {
         String category = etCategory.getText().toString().trim();
 
         if (name.isEmpty()) {
-            Toast.makeText(getContext(), "Введите название услуги", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Введите название услуги", Toast.LENGTH_SHORT);
             return;
         }
         if (durationStr.isEmpty()) {
-            Toast.makeText(getContext(), "Введите длительность", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Введите длительность", Toast.LENGTH_SHORT);
             return;
         }
         if (priceStr.isEmpty()) {
-            Toast.makeText(getContext(), "Введите цену", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Введите цену", Toast.LENGTH_SHORT);
             return;
         }
         if (category.isEmpty()) {
-            Toast.makeText(getContext(), "Введите категорию", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Введите категорию", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -174,7 +175,7 @@ public class ServiceDialog extends DialogFragment {
             duration = Integer.parseInt(durationStr);
             price = new BigDecimal(priceStr);
         } catch (NumberFormatException e) {
-            Toast.makeText(getContext(), "Неверный формат числа", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Неверный формат числа", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -202,12 +203,12 @@ public class ServiceDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "Услуга добавлена", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Услуга добавлена", Toast.LENGTH_SHORT);
             dismiss();
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -219,12 +220,12 @@ public class ServiceDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "Услуга обновлена", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Услуга обновлена", Toast.LENGTH_SHORT);
             dismiss();
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<Service>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }

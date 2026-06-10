@@ -25,6 +25,7 @@ import com.example.frolovnails.network.models.request.CreateAppointmentRequest;
 import com.example.frolovnails.network.models.response.AvailableDay;
 import com.example.frolovnails.network.models.response.AvailableSlotsResponse;
 import com.example.frolovnails.network.models.response.Service;
+import com.example.frolovnails.utils.ToastUtils;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -166,25 +167,25 @@ public class BookingFragment extends Fragment {
         switch (currentStep) {
             case 1:
                 if (selectedCategory == null) {
-                    Toast.makeText(getContext(), "Выберите категорию", Toast.LENGTH_SHORT).show();
+                    ToastUtils.show(getContext(), "Выберите категорию", Toast.LENGTH_SHORT);
                     return false;
                 }
                 return true;
             case 2:
                 if (selectedServiceId == null) {
-                    Toast.makeText(getContext(), "Выберите услугу", Toast.LENGTH_SHORT).show();
+                    ToastUtils.show(getContext(), "Выберите услугу", Toast.LENGTH_SHORT);
                     return false;
                 }
                 return true;
             case 3:
                 if (selectedDate == null) {
-                    Toast.makeText(getContext(), "Выберите дату", Toast.LENGTH_SHORT).show();
+                    ToastUtils.show(getContext(), "Выберите дату", Toast.LENGTH_SHORT);
                     return false;
                 }
                 return true;
             case 4:
                 if (selectedSlot == null) {
-                    Toast.makeText(getContext(), "Выберите время", Toast.LENGTH_SHORT).show();
+                    ToastUtils.show(getContext(), "Выберите время", Toast.LENGTH_SHORT);
                     return false;
                 }
                 return true;
@@ -291,10 +292,10 @@ public class BookingFragment extends Fragment {
                 groupServicesByCategory(services);
                 setupCategories();
             } else {
-                Toast.makeText(getContext(), "Нет доступных услуг", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Нет доступных услуг", Toast.LENGTH_SHORT);
             }
         } else if (resource instanceof Resource.Error) {
-            Toast.makeText(getContext(), "Ошибка загрузки услуг", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Ошибка загрузки услуг", Toast.LENGTH_SHORT);
         }
     }
 
@@ -376,11 +377,11 @@ public class BookingFragment extends Fragment {
                 rvAvailableDays.setAdapter(availableDaysAdapter);
                 rvAvailableDays.setVisibility(View.VISIBLE);
             } else {
-                Toast.makeText(getContext(), "Нет доступных дней для записи", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Нет доступных дней для записи", Toast.LENGTH_SHORT);
             }
         } else if (resource instanceof Resource.Error) {
             String error = ((Resource.Error<List<AvailableDay>>) resource).getMessage();
-            Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), error, Toast.LENGTH_SHORT);
         }
     }
 
@@ -405,11 +406,11 @@ public class BookingFragment extends Fragment {
                 rvAvailableSlots.setAdapter(slotsAdapter);
                 rvAvailableSlots.setVisibility(View.VISIBLE);
             } else {
-                Toast.makeText(getContext(), "Нет доступного времени на выбранную дату", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Нет доступного времени на выбранную дату", Toast.LENGTH_SHORT);
             }
         } else if (resource instanceof Resource.Error) {
             String error = ((Resource.Error<AvailableSlotsResponse>) resource).getMessage();
-            Toast.makeText(getContext(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Ошибка: " + error, Toast.LENGTH_SHORT);
         }
     }
 
@@ -435,14 +436,14 @@ public class BookingFragment extends Fragment {
         btnConfirmBooking.setText("✅ Подтвердить запись");
 
         if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "✅ Запись успешно создана!", Toast.LENGTH_LONG).show();
+            ToastUtils.show(getContext(), "✅ Запись успешно создана!", Toast.LENGTH_LONG);
 
             // Сбрасываем форму, но остаемся на месте
             resetForm();
 
         } else if (resource instanceof Resource.Error) {
             String error = ((Resource.Error<Void>) resource).getMessage();
-            Toast.makeText(getContext(), "❌ Ошибка: " + error, Toast.LENGTH_LONG).show();
+            ToastUtils.show(getContext(), "❌ Ошибка: " + error, Toast.LENGTH_LONG);
         }
     }
 

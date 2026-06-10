@@ -30,6 +30,7 @@ import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.ProfileResponse;
 import com.example.frolovnails.network.models.response.Service;
 import com.example.frolovnails.network.models.response.SliderItem;
+import com.example.frolovnails.utils.ToastUtils;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -257,8 +258,8 @@ public class HomeFragment extends Fragment {
         // Загружаем изображение
         Glide.with(this)
                 .load(fullUrl)
-                .placeholder(R.drawable.ic_launcher_foreground)
-                .error(R.drawable.ic_launcher_foreground)
+                .placeholder(R.drawable.ic_logo)
+                .error(R.drawable.ic_logo)
                 .into(imageView);
 
         builder.setView(dialogView);
@@ -351,15 +352,15 @@ public class HomeFragment extends Fragment {
 
     private void setupClickListeners() {
         cardAddress.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "\uD83D\uDCCD Адрес: г. Н.Новгород, ул. Лескова, \nд.2 (вход со стороны двора)", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "\uD83D\uDCCD Адрес: г. Н.Новгород, ул. Лескова, \nд.2 (вход со стороны двора)", Toast.LENGTH_SHORT);
         });
 
         cardWorkHours.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "\uD83D\uDC64 Мастер: Алина", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "\uD83D\uDC64 Мастер: Алина", Toast.LENGTH_SHORT);
         });
 
         cardPhone.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "\uD83D\uDCDE Телефон: +7 903 041 25 78", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "\uD83D\uDCDE Телефон: +7 903 041 25 78", Toast.LENGTH_SHORT);
         });
     }
 
@@ -457,8 +458,8 @@ public class HomeFragment extends Fragment {
 
             Glide.with(holder.itemView.getContext())
                     .load(fullUrl)
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
+                    .placeholder(R.drawable.ic_logo)
+                    .error(R.drawable.ic_logo)
                     .into(holder.imageView);
 
             // Клик по фото - открываем полноэкранную галерею

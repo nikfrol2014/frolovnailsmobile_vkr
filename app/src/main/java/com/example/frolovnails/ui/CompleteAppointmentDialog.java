@@ -23,6 +23,7 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.request.UpdateAppointmentStatusRequest;
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -126,7 +127,7 @@ public class CompleteAppointmentDialog extends DialogFragment {
         try {
             actualPrice = new BigDecimal(actualPriceStr);
         } catch (NumberFormatException e) {
-            Toast.makeText(getContext(), "Введите корректную цену", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Введите корректную цену", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -147,12 +148,12 @@ public class CompleteAppointmentDialog extends DialogFragment {
             btnComplete.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "Запись завершена", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Запись завершена", Toast.LENGTH_SHORT);
             dismiss();
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnComplete.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }

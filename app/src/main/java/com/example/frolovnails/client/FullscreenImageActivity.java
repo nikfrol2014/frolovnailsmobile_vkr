@@ -95,8 +95,8 @@ public class FullscreenImageActivity extends AppCompatActivity {
 
             Glide.with(holder.itemView.getContext())
                     .load(fullUrl)
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
+                    .placeholder(R.drawable.ic_logo)
+                    .error(R.drawable.ic_logo)
                     .into(holder.imageView);
         }
 

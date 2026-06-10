@@ -12,6 +12,7 @@ import com.example.frolovnails.network.ApiService;
 import com.example.frolovnails.network.models.request.UpdateAppointmentStatusRequest;
 import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.utils.ToastUtils;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -45,18 +46,18 @@ public class NotificationActionReceiver extends BroadcastReceiver {
                     @Override
                     public void onResponse(Call<ApiResponse<Appointment>> call, Response<ApiResponse<Appointment>> response) {
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                            Toast.makeText(context, "✅ Запись подтверждена", Toast.LENGTH_SHORT).show();
+                            ToastUtils.show(context, "✅ Запись подтверждена", Toast.LENGTH_SHORT);
                             Log.d(TAG, "Appointment confirmed");
                         } else {
                             String errorMsg = response.body() != null ? response.body().getMessage() : "Ошибка подтверждения";
-                            Toast.makeText(context, "❌ " + errorMsg, Toast.LENGTH_SHORT).show();
+                            ToastUtils.show(context, "❌ " + errorMsg, Toast.LENGTH_SHORT);
                             Log.e(TAG, "Confirm failed: " + response.code());
                         }
                     }
 
                     @Override
                     public void onFailure(Call<ApiResponse<Appointment>> call, Throwable t) {
-                        Toast.makeText(context, "❌ Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastUtils.show(context, "❌ Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT);
                         Log.e(TAG, "Confirm error: " + t.getMessage());
                     }
                 });
@@ -69,25 +70,25 @@ public class NotificationActionReceiver extends BroadcastReceiver {
                     @Override
                     public void onResponse(Call<ApiResponse<Appointment>> call, Response<ApiResponse<Appointment>> response) {
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                            Toast.makeText(context, "❌ Запись отменена", Toast.LENGTH_SHORT).show();
+                            ToastUtils.show(context, "❌ Запись отменена", Toast.LENGTH_SHORT);
                             Log.d(TAG, "Appointment cancelled");
                         } else {
                             String errorMsg = response.body() != null ? response.body().getMessage() : "Ошибка отмены";
-                            Toast.makeText(context, "❌ " + errorMsg, Toast.LENGTH_SHORT).show();
+                            ToastUtils.show(context, "❌ " + errorMsg, Toast.LENGTH_SHORT);
                             Log.e(TAG, "Cancel failed: " + response.code());
                         }
                     }
 
                     @Override
                     public void onFailure(Call<ApiResponse<Appointment>> call, Throwable t) {
-                        Toast.makeText(context, "❌ Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastUtils.show(context, "❌ Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT);
                         Log.e(TAG, "Cancel error: " + t.getMessage());
                     }
                 });
             }
         } catch (Exception e) {
             Log.e(TAG, "Error: " + e.getMessage());
-            Toast.makeText(context, "❌ Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(context, "❌ Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }

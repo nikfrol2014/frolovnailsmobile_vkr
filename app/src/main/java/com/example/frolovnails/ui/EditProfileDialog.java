@@ -20,6 +20,7 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.request.UpdateProfileRequest;
 import com.example.frolovnails.network.models.response.ProfileResponse;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -127,7 +128,7 @@ public class EditProfileDialog extends DialogFragment {
         boolean birthDateChanged = !birthDate.equals(originalBirthDate != null ? originalBirthDate : "");
 
         if (!firstNameChanged && !lastNameChanged && !birthDateChanged) {
-            Toast.makeText(getContext(), "Ничего не изменено", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Ничего не изменено", Toast.LENGTH_SHORT);
             dismiss();
             return;
         }
@@ -148,7 +149,7 @@ public class EditProfileDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "✅ Профиль обновлен", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "✅ Профиль обновлен", Toast.LENGTH_SHORT);
             if (onSaveListener != null) {
                 onSaveListener.onSave();
             }
@@ -156,7 +157,7 @@ public class EditProfileDialog extends DialogFragment {
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }

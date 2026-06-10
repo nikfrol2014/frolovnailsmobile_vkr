@@ -27,6 +27,7 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Appointment;
 import com.example.frolovnails.network.models.response.Service;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -217,7 +218,7 @@ public class RescheduleDialog extends DialogFragment {
         String newDateTime = etDateTime.getText().toString().trim();
 
         if (newDateTime.isEmpty()) {
-            Toast.makeText(getContext(), "Выберите новую дату и время", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Выберите новую дату и время", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -225,7 +226,7 @@ public class RescheduleDialog extends DialogFragment {
         boolean serviceChanged = !selectedServiceId.equals(appointment.getService().getId());
 
         if (!timeChanged && !serviceChanged) {
-            Toast.makeText(getContext(), "Ничего не изменено", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Ничего не изменено", Toast.LENGTH_SHORT);
             dismiss();
             return;
         }
@@ -258,7 +259,7 @@ public class RescheduleDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "✅ Запись перенесена", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "✅ Запись перенесена", Toast.LENGTH_SHORT);
             if (listener != null) {
                 listener.onRescheduleSuccess();
             }
@@ -266,7 +267,7 @@ public class RescheduleDialog extends DialogFragment {
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }

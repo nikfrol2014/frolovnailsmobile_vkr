@@ -20,7 +20,11 @@ import com.google.android.material.button.MaterialButton;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class AvailableDaysTabFragment extends RefreshableFragment {
 
@@ -93,7 +97,7 @@ public class AvailableDaysTabFragment extends RefreshableFragment {
 
     @Override
     protected void loadData() {
-        viewModel.loadAvailableDays(3);
+        viewModel.loadAvailableDaysForAdmin(3);
         viewModel.getAvailableDaysResult().observe(getViewLifecycleOwner(), resource -> {
             if (resource instanceof Resource.Loading) {
                 progressDays.setVisibility(View.VISIBLE);
@@ -106,6 +110,18 @@ public class AvailableDaysTabFragment extends RefreshableFragment {
                     tvEmptyDays.setVisibility(View.VISIBLE);
                     rvAvailableDays.setVisibility(View.GONE);
                 } else {
+                    // ========== СОРТИРУЕМ ДНИ ПО ДАТЕ ==========
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+                    Collections.sort(data, (d1, d2) -> {
+                        try {
+                            java.util.Date date1 = sdf.parse(d1.getAvailableDate());
+                            java.util.Date date2 = sdf.parse(d2.getAvailableDate());
+                            return date1.compareTo(date2);
+                        } catch (ParseException e) {
+                            return 0;
+                        }
+                    });
+
                     tvEmptyDays.setVisibility(View.GONE);
                     rvAvailableDays.setVisibility(View.VISIBLE);
                     adapter.setItems(data);

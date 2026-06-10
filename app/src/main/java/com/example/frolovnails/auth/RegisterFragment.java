@@ -19,6 +19,7 @@ import androidx.navigation.Navigation;
 import com.example.frolovnails.R;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.network.models.response.AuthResponse;
+import com.example.frolovnails.utils.ToastUtils;
 
 
 public class RegisterFragment extends Fragment {
@@ -59,12 +60,12 @@ public class RegisterFragment extends Fragment {
             String confirmPassword = etConfirmPassword.getText().toString().trim();
 
             if (firstName.isEmpty() || phone.isEmpty() || password.isEmpty()) {
-                Toast.makeText(getContext(), "Заполните обязательные поля", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Заполните обязательные поля", Toast.LENGTH_SHORT);
                 return;
             }
 
             if (!password.equals(confirmPassword)) {
-                Toast.makeText(getContext(), "Пароли не совпадают", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Пароли не совпадают", Toast.LENGTH_SHORT);
                 return;
             }
 
@@ -89,7 +90,7 @@ public class RegisterFragment extends Fragment {
             btnRegister.setEnabled(true);
 
             AuthResponse response = ((Resource.Success<AuthResponse>) resource).getData();
-            Toast.makeText(getContext(), "Регистрация успешна! Теперь войдите.", Toast.LENGTH_LONG).show();
+            ToastUtils.show(getContext(), "Регистрация успешна! Теперь войдите.", Toast.LENGTH_LONG);
 
             Navigation.findNavController(requireView()).navigate(R.id.action_register_to_login);
 
@@ -97,7 +98,7 @@ public class RegisterFragment extends Fragment {
             progressBar.setVisibility(View.GONE);
             btnRegister.setEnabled(true);
             String error = ((Resource.Error<AuthResponse>) resource).getMessage();
-            Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), error, Toast.LENGTH_SHORT);
         }
     }
 }

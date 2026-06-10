@@ -27,6 +27,7 @@ import com.example.frolovnails.network.ApiClient;
 import com.example.frolovnails.network.ApiService;
 import com.example.frolovnails.network.models.response.ApiResponse;
 import com.example.frolovnails.network.models.response.AuthResponse;
+import com.example.frolovnails.utils.ToastUtils;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
@@ -68,7 +69,7 @@ public class LoginFragment extends Fragment {
             String password = etPassword.getText().toString().trim();
 
             if (phone.isEmpty() || password.isEmpty()) {
-                Toast.makeText(getContext(), "Заполните все поля", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Заполните все поля", Toast.LENGTH_SHORT);
                 return;
             }
 
@@ -114,7 +115,7 @@ public class LoginFragment extends Fragment {
             // ========== СОХРАНЯЕМ FCM ТОКЕН ==========
             saveFcmToken();
 
-            Toast.makeText(getContext(), "Вход выполнен! Роль: " + response.getRole(), Toast.LENGTH_LONG).show();
+            ToastUtils.show(getContext(), "Вход выполнен! Роль: " + response.getRole(), Toast.LENGTH_LONG);
 
             // Перенаправление в зависимости от роли
             Intent intent;
@@ -130,7 +131,7 @@ public class LoginFragment extends Fragment {
             progressBar.setVisibility(View.GONE);
             btnLogin.setEnabled(true);
             String error = ((Resource.Error<AuthResponse>) resource).getMessage();
-            Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), error, Toast.LENGTH_SHORT);
         }
     }
 

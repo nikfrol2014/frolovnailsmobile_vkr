@@ -21,6 +21,7 @@ import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.ProfileResponse;
 import com.example.frolovnails.ui.ChangePasswordDialog;
 import com.example.frolovnails.ui.EditProfileDialog;
+import com.example.frolovnails.utils.ToastUtils;
 import com.google.android.material.card.MaterialCardView;
 
 import java.io.IOException;
@@ -96,7 +97,7 @@ public class ProfileFragment extends Fragment {
         cardChangePassword.setOnClickListener(v -> {
             ChangePasswordDialog dialog = ChangePasswordDialog.newInstance();
             dialog.setOnPasswordChangedListener(() -> {
-                Toast.makeText(getContext(), "Пароль изменен. Войдите заново.", Toast.LENGTH_LONG).show();
+                ToastUtils.show(getContext(), "Пароль изменен. Войдите заново.", Toast.LENGTH_LONG);
                 logout();
             });
             dialog.show(getChildFragmentManager(), "change_password");
@@ -122,7 +123,7 @@ public class ProfileFragment extends Fragment {
             }
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), ((Resource.Error<ProfileResponse>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<ProfileResponse>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -146,10 +147,10 @@ public class ProfileFragment extends Fragment {
         if (resource instanceof Resource.Loading) {
             // прогресс уже показан в диалоге
         } else if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "✅ Профиль обновлен", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "✅ Профиль обновлен", Toast.LENGTH_SHORT);
             loadProfile();
         } else if (resource instanceof Resource.Error) {
-            Toast.makeText(getContext(), "❌ " + ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "❌ " + ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -157,9 +158,9 @@ public class ProfileFragment extends Fragment {
         if (resource instanceof Resource.Loading) {
             // прогресс уже показан в диалоге
         } else if (resource instanceof Resource.Success) {
-            Toast.makeText(getContext(), "✅ Пароль изменен", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "✅ Пароль изменен", Toast.LENGTH_SHORT);
         } else if (resource instanceof Resource.Error) {
-            Toast.makeText(getContext(), "❌ " + ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "❌ " + ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -176,7 +177,7 @@ public class ProfileFragment extends Fragment {
         if (tokenManager != null) {
             tokenManager.clear();
         }
-        Toast.makeText(getContext(), "Вы вышли из системы", Toast.LENGTH_SHORT).show();
+        ToastUtils.show(getContext(), "Вы вышли из системы", Toast.LENGTH_SHORT);
 
         Intent intent = new Intent(getContext(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

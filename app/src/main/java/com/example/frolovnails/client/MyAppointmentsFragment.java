@@ -21,6 +21,7 @@ import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.request.UpdateAppointmentStatusRequest;
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.utils.ToastUtils;
 import com.google.android.material.tabs.TabLayout;
 
 import java.io.IOException;
@@ -167,7 +168,7 @@ public class MyAppointmentsFragment extends Fragment {
             progressBar.setVisibility(View.GONE);
             showEmptyState();
             String error = ((Resource.Error<List<Appointment>>) resource).getMessage();
-            Toast.makeText(getContext(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Ошибка: " + error, Toast.LENGTH_SHORT);
         }
     }
 
@@ -285,12 +286,12 @@ public class MyAppointmentsFragment extends Fragment {
             progressBar.setVisibility(View.VISIBLE);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "✅ Статус записи обновлен", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "✅ Статус записи обновлен", Toast.LENGTH_SHORT);
             loadAppointments();
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             String error = ((Resource.Error<Appointment>) resource).getMessage();
-            Toast.makeText(getContext(), "❌ Ошибка: " + error, Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "❌ Ошибка: " + error, Toast.LENGTH_SHORT);
         }
     }
 

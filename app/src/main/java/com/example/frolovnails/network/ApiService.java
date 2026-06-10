@@ -156,7 +156,7 @@ public interface ApiService {
 
     // Получить доступные дни
     @GET("/api/schedule/admin/available-days")
-    Call<ApiResponse<AvailableDaysResponse>> getAvailableDaysForAdmin(
+    Call<ApiResponse<AdminAvailableDaysResponse>> getAvailableDaysForAdmin(
             @Query("startDate") String startDate,
             @Query("endDate") String endDate
     );

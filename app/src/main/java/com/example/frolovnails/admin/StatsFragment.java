@@ -24,6 +24,7 @@ import com.example.frolovnails.adapters.TopServicesAdapter;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.stats.DashboardStatsResponse;
+import com.example.frolovnails.utils.ToastUtils;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -349,7 +350,7 @@ public class StatsFragment extends Fragment {
                 viewModel.loadStatsForPeriod(customStartDate, customEndDate);
                 dialog.dismiss();
             } else {
-                Toast.makeText(getContext(), "Выберите начальную и конечную дату", Toast.LENGTH_SHORT).show();
+                ToastUtils.show(getContext(), "Выберите начальную и конечную дату", Toast.LENGTH_SHORT);
             }
         });
 
@@ -456,7 +457,7 @@ public class StatsFragment extends Fragment {
                 swipeRefresh.setRefreshing(false);
             }
             String error = ((Resource.Error<DashboardStatsResponse>) resource).getMessage();
-            Toast.makeText(getContext(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Ошибка: " + error, Toast.LENGTH_SHORT);
         }
     }
 

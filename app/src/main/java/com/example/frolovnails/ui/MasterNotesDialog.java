@@ -19,6 +19,7 @@ import com.example.frolovnails.admin.CalendarViewModel;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
 import com.example.frolovnails.network.models.response.Appointment;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -111,7 +112,7 @@ public class MasterNotesDialog extends DialogFragment {
         // Проверяем, изменились ли заметки
         String existing = existingNotes != null ? existingNotes : "";
         if (notes.equals(existing)) {
-            Toast.makeText(getContext(), "Заметки не изменены", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Заметки не изменены", Toast.LENGTH_SHORT);
             dismiss();
             return;
         }
@@ -129,12 +130,12 @@ public class MasterNotesDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "Заметки сохранены", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Заметки сохранены", Toast.LENGTH_SHORT);
             dismiss();
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }

@@ -18,6 +18,7 @@ import com.example.frolovnails.R;
 import com.example.frolovnails.admin.ProfileViewModel;
 import com.example.frolovnails.common.Resource;
 import com.example.frolovnails.common.TokenManager;
+import com.example.frolovnails.utils.ToastUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -94,12 +95,12 @@ public class ChangePasswordDialog extends DialogFragment {
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
         if (oldPassword.isEmpty()) {
-            Toast.makeText(getContext(), "Введите старый пароль", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Введите старый пароль", Toast.LENGTH_SHORT);
             return;
         }
 
         if (newPassword.isEmpty()) {
-            Toast.makeText(getContext(), "Введите новый пароль", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "Введите новый пароль", Toast.LENGTH_SHORT);
             return;
         }
 
@@ -113,7 +114,7 @@ public class ChangePasswordDialog extends DialogFragment {
             btnSave.setEnabled(false);
         } else if (resource instanceof Resource.Success) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(getContext(), "✅ Пароль изменен", Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), "✅ Пароль изменен", Toast.LENGTH_SHORT);
             if (listener != null) {
                 listener.onPasswordChanged();
             }
@@ -121,7 +122,7 @@ public class ChangePasswordDialog extends DialogFragment {
         } else if (resource instanceof Resource.Error) {
             progressBar.setVisibility(View.GONE);
             btnSave.setEnabled(true);
-            Toast.makeText(getContext(), ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.show(getContext(), ((Resource.Error<Void>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
     }
 }
