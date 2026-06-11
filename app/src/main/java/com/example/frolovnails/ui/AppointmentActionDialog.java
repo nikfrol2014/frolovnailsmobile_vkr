@@ -29,6 +29,8 @@ public class AppointmentActionDialog extends DialogFragment {
         void onChangeStatus(Appointment appointment);   // Смена статуса
         void onMasterNotes(Appointment appointment);    // Заметки
         void onClientDetails(Appointment appointment);  // Детали клиента
+
+        void onComplete(Appointment appointment);
     }
 
     public static AppointmentActionDialog newInstance(Appointment appointment) {
@@ -136,6 +138,14 @@ public class AppointmentActionDialog extends DialogFragment {
         btnDelete.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onDelete(appointment);
+            }
+            dismiss();
+        });
+
+        Button btnComplete = view.findViewById(R.id.btnComplete);
+        btnComplete.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onComplete(appointment);
             }
             dismiss();
         });

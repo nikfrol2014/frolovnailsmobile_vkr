@@ -42,6 +42,8 @@ public class CompleteAppointmentDialog extends DialogFragment {
     private CalendarViewModel viewModel;
     private Appointment appointment;
 
+    private OnCompleteListener onCompleteListener;
+
     public static CompleteAppointmentDialog newInstance(Appointment appointment) {
         CompleteAppointmentDialog fragment = new CompleteAppointmentDialog();
         Bundle args = new Bundle();
@@ -155,5 +157,16 @@ public class CompleteAppointmentDialog extends DialogFragment {
             btnComplete.setEnabled(true);
             ToastUtils.show(getContext(), ((Resource.Error<Appointment>) resource).getMessage(), Toast.LENGTH_SHORT);
         }
+        if (onCompleteListener != null) {
+            onCompleteListener.onComplete();
+        }
+    }
+
+    public interface OnCompleteListener {
+        void onComplete();
+    }
+
+    public void setOnCompleteListener(OnCompleteListener listener) {
+        this.onCompleteListener = listener;
     }
 }

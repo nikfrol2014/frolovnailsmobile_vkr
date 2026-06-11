@@ -24,6 +24,7 @@ import com.example.frolovnails.network.models.response.ScheduleBlock;
 import com.example.frolovnails.network.models.response.TimelineResponse;
 import com.example.frolovnails.ui.AppointmentActionDialog;
 import com.example.frolovnails.ui.ClientDetailsDialog;
+import com.example.frolovnails.ui.CompleteAppointmentDialog;
 import com.example.frolovnails.ui.MasterNotesDialog;
 import com.example.frolovnails.ui.RescheduleDialog;
 import com.example.frolovnails.utils.ToastUtils;
@@ -220,6 +221,11 @@ public class TimelineFragment extends Fragment {
         AppointmentActionDialog dialog = AppointmentActionDialog.newInstance(appointment);
         dialog.setOnActionListener(new AppointmentActionDialog.OnActionListener() {
             @Override
+            public void onComplete(Appointment appointment) {
+                showCompleteAppointmentDialog(appointment);
+            }
+
+            @Override
             public void onReschedule(Appointment appointment) {
                 showRescheduleDialog(appointment);
             }
@@ -252,6 +258,14 @@ public class TimelineFragment extends Fragment {
             }
         });
         dialog.show(getChildFragmentManager(), "appointment_actions");
+    }
+
+    private void showCompleteAppointmentDialog(Appointment appointment) {
+        CompleteAppointmentDialog dialog = CompleteAppointmentDialog.newInstance(appointment);
+        dialog.setOnCompleteListener(() -> {
+            loadDataForDate();  // Обновляем таймлайн после завершения
+        });
+        dialog.show(getChildFragmentManager(), "complete_appointment");
     }
 
     // ========== ПЕРЕНОС ЗАПИСИ ==========
