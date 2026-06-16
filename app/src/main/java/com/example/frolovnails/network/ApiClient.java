@@ -10,7 +10,7 @@ import com.example.frolovnails.network.interceptors.JwtInterceptor;
 import java.util.concurrent.TimeUnit;
 
 public class ApiClient {
-    private static final String BASE_URL = "http://192.168.0.111:8080/";
+    private static final String BASE_URL = "http://155.212.172.109:8080/"; // ip сервера
     private static OkHttpClient okHttpClient;
     private static Retrofit retrofit;
 
